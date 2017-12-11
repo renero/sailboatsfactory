@@ -1,0 +1,31 @@
+file_path: '~/Documents/SideProjects/sailboatsfactory/data/ibex_1000.csv'
+scaler: MinMaxScaler(feature_range=(-1, 1))
+lstm_stateful: True
+lstm_shuffle: False
+lstm_loss: 'mae'
+lstm_optimizer: 'adam'
+lstm_neurons: 100
+lstm_num_epochs: 75
+lstm_batch_size: 50
+look_back: 1
+look_forward: 1
+test_numbatches: 2
+keras_verbose_level: 0
+delimiter: ';'
+columNames: 
+  - 'price'
+  - 'var-1'
+  - 'var-2'
+  - 'var-3'
+  - 'var-4'
+  - 'var-5'
+  - 'var-6'
+  - 'var-7'
+  - 'var-8'
+  - 'var-9'
+  - 'var-10'
+  - 'var-11'
+  - 'var-12'
+  - 'var-13'
+  - 'var-14'
+  - 'var-15'
