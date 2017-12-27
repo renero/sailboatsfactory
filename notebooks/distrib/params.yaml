@@ -1,0 +1,36 @@
+file_path: '~/Documents/SideProjects/sailboatsfactory/data/ibex_1y_konk.csv'
+scaler: MinMaxScaler(feature_range=(-1, 1))
+lstm_stateful: True
+lstm_shuffle: False
+lstm_loss: 'mae'
+lstm_optimizer: 'adam'
+lstm_neurons: 75
+lstm_num_epochs: 250
+lstm_batch_size: 16
+look_back: 1
+look_forward: 1
+test_numbatches: 4
+keras_verbose_level: 0
+delimiter: ','
+columNames: 
+  - 'price'
+  - 'v1'
+  - 'v2'
+  - 'v3'
+  - 'v4'
+  - 'v5'
+  - 'v6'
+  - 'v7'
+  - 'v8'
+  - 'v9'
+  - 'v10'
+  - 'v11'
+  - 'v12'
+  - 'v13'
+  - 'v14'
+  - 'v15'
+  - 'v16'
+  - 'v17'
+  - 'v18'
+  - 'v19'
+  - 'v20'
