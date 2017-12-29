@@ -1,43 +1,55 @@
-file_path: '~/Documents/SideProjects/sailboatsfactory/data/ibex_2m_konk_rounded.csv'
+file_path: '~/Documents/SideProjects/sailboatsfactory/data/ibex_hourly_1y_rounded.csv'
 
 scaler: MinMaxScaler(feature_range=(0, 1))
 
 lstm_stateful: True
 lstm_shuffle: False
 lstm_loss: 'mae'
-lstm_optimizer: 'adam'
+lstm_optimizer: 'rmsprop'
 
-lstm_neurons: 50
-lstm_num_epochs: 20
-lstm_batch_size: 10
-lstm_timesteps: 5
+#lstm_neurons: 50
+lstm_num_epochs: 50
+lstm_batch_size: 32
+lstm_timesteps: 4
 lstm_predictions: 1
+lstm_dropout1: 0.1
+lstm_dropout2: 0.1
+lstm_dropout3: 0.2
+lstm_1stlayer: 256
+lstm_2ndlayer: 128
+lstm_3rdlayer: 32
 
-validation_ratio: 0.1
-look_back: 2
-look_forward: 1
-test_numbatches: 1
+validation_ratio: 0.05
+diff_intervals: 1
+#look_back: 2
+#look_forward: 1
+#test_numbatches: 1
+num_testcases: 100
 
 keras_verbose_level: 1
 delimiter: '|'
 columNames:
-  - 'v1'
-  - 'v2'
-  - 'v3'
-#  - 'v4'
-#  - 'v5'
-#  - 'v6'
-#  - 'v7'
-#  - 'v8'
-#  - 'v9'
-#  - 'v10'
-#  - 'v11'
-#  - 'v12'
-#  - 'v13'
-#  - 'v14'
-#  - 'v15'
-#  - 'v16'
-#  - 'v17'
-#  - 'v18'
-#  - 'v19'
-#  - 'v20'
+  - tickcloseprice
+#  - tickopenprice
+#  - tickminprice
+#  - tickmaxprice
+  - tickvolume
+  - awesome
+#  - macd
+  - rsi
+#  - rsi2
+#  - exponentialmovingaverage
+  - moneyflowindicator
+#  - moneyflowindicator2
+  - bollingermid
+#  - bollingerlow
+#  - bollingerupper
+  - stochastick
+#  - stochasticd
+  - stochasticrsi
+  - positivevolumeindex
+  - negativevolumeindex
+#  - volumeweightedaverageprice
+#  - dailytime
+#  - weeklytime
+#  - monthlytime

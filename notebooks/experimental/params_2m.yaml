@@ -1,0 +1,46 @@
+file_path: '~/Documents/SideProjects/sailboatsfactory/data/ibex_2m_konk_rounded.csv'
+
+scaler: MinMaxScaler(feature_range=(0, 1))
+
+lstm_stateful: True
+lstm_shuffle: False
+lstm_loss: 'mae'
+lstm_optimizer: 'rmsprop'
+
+#lstm_neurons: 50
+lstm_num_epochs: 20
+lstm_batch_size: 10
+lstm_timesteps: 10
+lstm_predictions: 1
+
+validation_ratio: 0.05
+diff_intervals: 1
+#look_back: 2
+#look_forward: 1
+#test_numbatches: 1
+num_testcases: 100
+
+keras_verbose_level: 1
+delimiter: '|'
+columNames:
+  - 'price'
+  - 'v1'
+#  - 'v2'
+#  - 'v3'
+#  - 'v4'
+  - 'v5'
+  - 'v6'
+#  - 'v7'
+  - 'v8'
+  - 'v9'
+#  - 'v10'
+  - 'v11'
+  - 'v12'
+#  - 'v13'
+#  - 'v14'
+#  - 'v15'
+  - 'v16'
+  - 'v17'
+  - 'v18'
+  - 'v19'
+#  - 'v20'
