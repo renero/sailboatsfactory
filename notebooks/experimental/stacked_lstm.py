@@ -52,24 +52,7 @@ plot.prediction(Y_test_raw, Y_hat_raw,
                        trend_error, len(Y_test_inv) - 1))
 
 
-# Qué hace con lo que ha aprendido? Le voy a enseñar datos de entrenamiento para ver qué predice.
 
-Xseen = X_train[:100]
-Yseen = Y_train[:100]
-
-Y_hat = model.predict(Xseen)
-Y_test_inv = params['y_scaler'].inverse_transform(Yseen)
-Y_hat_inv = params['y_scaler'].inverse_transform(Y_hat)
-plot.curves(Y_test_inv, Y_hat_inv, labels=['Y_test', 'prediction'])
-
-Y_test_raw = raw.values[:params['num_testcases'], 0].reshape((params['num_testcases'], 1))
-Y_hat_raw = data.inv_diff(Y_hat_inv[-1:], Y_test_raw)
-rmse, trend_error = compute.error(Y_test_raw, Y_hat_raw)
-plot.prediction(Y_test_raw, Y_hat_raw,
-                title='RMSE={:.02f}, T.E={:.02f}({:d}/{:d})'.
-                format(rmse,
-                       (trend_error/(len(Y_test_inv))),
-                       trend_error, len(Y_test_inv) - 1))
 
 
 

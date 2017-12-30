@@ -37,16 +37,24 @@ def build(params):
     architecture is set in the code.
     """
     model = Sequential()
+    # Check if my design has more than 1 layer.
+    ret_seq_flag = False
+    if params['lstm_numlayers'] > 1:
+        ret_seq_flag = True
+    # Add input layer.
     model.add(
         LSTM(
-            params['lstm_1stlayer'],
+            params['lstm_layer1'],
             input_shape=(params['lstm_timesteps'], params['num_features']),
-            return_sequences=True))
+            return_sequences=ret_seq_flag))
     model.add(Dropout(params['lstm_dropout1']))
-    model.add(LSTM(params['lstm_2ndlayer']))
-    model.add(Dropout(params['lstm_dropout2']))
+    # Add additional hidden layers.
+    for layer in range(params['lstm_numlayers'] - 1):
+        model.add(LSTM(params['lstm_layer{:d}'.format(layer+2)]))
+        model.add(Dropout(params['lstm_dropout{:d}'.format(layer+2)]))
     # https://www.ijsr.net/archive/v6i4/ART20172755.pdf
     # model.add(Dense(16, kernel_initializer='uniform', activation='relu'))
+    # Output layer.
     model.add(Dense(params['lstm_predictions']))
     model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
     return model

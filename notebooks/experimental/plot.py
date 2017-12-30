@@ -16,7 +16,7 @@ def curves(y, yhat, labels):
 
 
 def setup_plot(title):
-    plt.figure(num=None, figsize=(12, 8), dpi=80, facecolor='w', edgecolor='k')
+    plt.figure(num=None, figsize=(10, 6), dpi=80, facecolor='w', edgecolor='k')
     major_ticks = numpy.arange(0, 1001, 10)
     minor_ticks = numpy.arange(0, 1001, 2)
     ax = plt.gca()  # Get Current Axes
@@ -34,14 +34,17 @@ def setup_plot(title):
 def prediction(Y, Yhat, title):
     setup_plot(title)
     # place the prediction as we did with test_values
-    for idx in range(len(Yhat)-1):
-        idx += 1
+    for idx in range(len(Yhat)):
+        #idx += 1
         x = idx
         y = Yhat[idx]
-        yhat_trend = numpy.sign(Yhat[idx]-Y[idx-1])
-        y_trend = numpy.sign(Y[idx]-Y[idx-1])
-        error = int(yhat_trend != y_trend)
-        color = 'red' if error is 1 else 'green'
+        if idx > 0:
+            yhat_trend = numpy.sign(Yhat[idx]-Y[idx-1])
+            y_trend = numpy.sign(Y[idx]-Y[idx-1])
+            error = int(yhat_trend != y_trend)
+            color = 'red' if error is 1 else 'green'
+        else:
+            color = 'green'
         plt.plot([x], [y], marker='o', markersize=5, color=color)
     plt.plot(Yhat, marker='', color='r', linewidth=1)
     plt.plot(Y, marker='o', color='b', linewidth=1.0, alpha=0.5)
