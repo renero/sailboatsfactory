@@ -8,15 +8,16 @@ lstm_loss: 'mae'
 lstm_optimizer: 'rmsprop'
 
 #lstm_neurons: 50
-lstm_num_epochs: 50
-lstm_batch_size: 32
-lstm_timesteps: 4
+lstm_num_epochs: 25
+lstm_batch_size: 5
+lstm_timesteps: 5
 lstm_predictions: 1
+
 lstm_dropout1: 0.1
 lstm_dropout2: 0.1
 lstm_dropout3: 0.2
-lstm_1stlayer: 256
-lstm_2ndlayer: 128
+lstm_1stlayer: 128
+lstm_2ndlayer: 64
 lstm_3rdlayer: 32
 
 validation_ratio: 0.05
