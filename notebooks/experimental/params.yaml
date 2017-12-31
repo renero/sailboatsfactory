@@ -5,26 +5,27 @@ scaler: MinMaxScaler(feature_range=(0, 1))
 lstm_stateful: True
 lstm_shuffle: False
 lstm_loss: 'mae'
-lstm_optimizer: 'adam'
+lstm_optimizer: 'rmsprop'
 
 #lstm_neurons: 50
 lstm_num_epochs: 20
-lstm_batch_size: 1
-lstm_timesteps: 4
+lstm_batch_size: 10
+lstm_timesteps: 10
 lstm_predictions: 1
 
 lstm_numlayers: 2
 lstm_dropout1: 0.1
 lstm_dropout2: 0.1
 lstm_layer1: 128
-lstm_layer2: 64
+lstm_layer2: 128
+
 
 validation_ratio: 0.05
 diff_intervals: 1
 #look_back: 2
 #look_forward: 1
 #test_numbatches: 1
-num_testcases: 25
+num_testcases: 50
 
 keras_verbose_level: 1
 delimiter: '|'
@@ -35,10 +36,10 @@ columNames:
 #  - tickmaxprice
   - tickvolume
   - awesome
-#  - macd
+  - macd
   - rsi
 #  - rsi2
-#  - exponentialmovingaverage
+  - exponentialmovingaverage
   - moneyflowindicator
 #  - moneyflowindicator2
   - bollingermid
@@ -49,7 +50,7 @@ columNames:
   - stochasticrsi
   - positivevolumeindex
   - negativevolumeindex
-#  - volumeweightedaverageprice
+  - volumeweightedaverageprice
 #  - dailytime
-#  - weeklytime
+  - weeklytime
 #  - monthlytime

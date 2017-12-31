@@ -26,39 +26,36 @@ def read(my_params):
 def diff(a, interval=1):
     """
     Given a 2D array (a), compute the one resulting from differentiating each
-    element by the one at "interval" distance from it, columwise:
+    element by the one at "interval" distance from it, only for the first column:
 
-     [  2.   4.   6.]  -> [  0.  40.   2.]
-     [  2.  44.   8.]  -> [  1. -39.  -2.]
-     [  3.   5.   6.]  -> [  0.   7.   8.]
-     [  3.  12.  14.]  -> [  2.  76.  -8.]
-     [  5.  88.   6.]
+    [  1.   1.]
+    [  2.   2.]  =>  [ 1.   2.]
+    [  4.   3.]  =>  [ 2.   3.]
+    [  7.   4.]  =>  [ 3.   4.]
+    [ 11.   5.]  =>  [ 4.   5.]
 
     """
     if a.ndim is not 2:
         raise ValueError(
             'Differentiating tensor with wrong number of dimensions ({:d})'.
             format(a.ndim))
-    b = np.empty(((a.shape[0] - interval), a.shape[1]))
-    for row in range(interval, len(a)):
-        for col in range(a.shape[1]):
-            b[row - interval][col] = a[row][col] - a[row - interval][col]
-    return b
+    return np.concatenate((
+                         (a[interval:, 0:1] - a[:-interval, 0:1]),
+                          a[interval:, 1:]),
+                          axis=1)
 
 
-def inv_diff(a, b, interval=1):
+def inverse_diff(a_diff, a, interval=1):
     """
     Inverts the operation at 'diff', needing the original vector.
     """
-    if a.ndim is not 2:
+    if a_diff.ndim is not 2 or a.ndim is not 2:
         raise ValueError(
             'Differentiating with wrong number of dimensions({:d})'.format(
                 a.ndim))
-    c = np.empty((b.shape[0], b.shape[1]))
-    for col in range(b.shape[1]):
-        c[:, col] = np.concatenate(
-            (b[0:interval, col], a[:, col] + b[:-interval, col]), axis=0)
-    return c
+    col0 = np.concatenate((a[0:interval, 0:1], (a_diff[:, 0:1] + a[:-1, 0:1])),
+                          axis=0)
+    return np.concatenate((col0, a[:, 1:]), axis=1)
 
 
 def split(X, Y, num_testcases):
@@ -98,14 +95,25 @@ def prepare(raw, params):
     # Build the 3D array (num_frames, num_timesteps, num_features)
     X = empty((num_frames, num_timesteps, num_features))
     Y = empty((num_frames, num_predictions))
-    for i in range(num_samples - (num_timesteps + num_predictions)):
+    for i in range(num_samples - num_timesteps):
         X[i] = non_stationary[i:i + num_timesteps, ]
         Y[i] = non_stationary[i + num_timesteps:i + num_timesteps + num_predictions, 0]
     # Scale and remove the last element --don't know why it's with zeroes.
-    X_scaled = np.array([params['x_scaler'].fit_transform(X[i]) for i in range(X.shape[0])])[:-1]
-    Y_scaled = params['y_scaler'].fit_transform(Y)[:-1]
+    X_scaled = np.array([params['x_scaler'].fit_transform(X[i]) for i in range(X.shape[0])])
+    Y_scaled = params['y_scaler'].fit_transform(Y)
     # Split in training and test
     return split(X_scaled, Y_scaled, params['num_testcases'])
 
 
+def recover_Ytest(Y_test, raw, params):
+    """
+    From the test values of Y, returns the original values, after
+    inverting the scaling, and the diff operations. We need the
+    original raw values for that.
+    """
+    y_unscaled = params['y_scaler'].inverse_transform(Y_test)
+    y_undiff = inverse_diff(
+                y_unscaled,
+                raw[-(params['num_testcases']+1):, 0:1])
+    return y_undiff[-params['num_testcases']:]
 #

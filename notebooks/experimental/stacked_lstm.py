@@ -37,19 +37,20 @@ plot.history(train_loss)
 
 # Plot the test values for Y, and Y_hat, without scaling (inverted)
 Y_hat = model.predict(X_test)
-Y_test_inv = params['y_scaler'].inverse_transform(Y_test)
-Y_hat_inv = params['y_scaler'].inverse_transform(Y_hat)
-plot.curves(Y_test_inv, Y_hat_inv, labels=['Y_test', 'prediction'])
+
+# Y_test_inv = params['y_scaler'].inverse_transform(Y_test)
+# Y_hat_inv = params['y_scaler'].inverse_transform(Y_hat)
+plot.curves(Y_test, Y_hat, labels=['Y_test', 'prediction'])
 
 # Plot the raw values, whithout differencing.
-Y_test_raw = raw.values[-params['num_testcases']:, 0].reshape((params['num_testcases'], 1))
-Y_hat_raw = data.inv_diff(Y_hat_inv[-1:], Y_test_raw)
-rmse, trend_error = compute.error(Y_test_raw, Y_hat_raw)
-plot.prediction(Y_test_raw, Y_hat_raw,
+# Y_test_raw = raw.values[-params['num_testcases']:, 0].reshape((params['num_testcases'], 1))
+# Y_hat_raw = data.inv_diff(Y_hat_inv[-1:], Y_test_raw)
+rmse, trend_error = compute.error(Y_test, Y_hat)
+plot.prediction(Y_test, Y_hat,
                 title='RMSE={:.02f}, T.E={:.02f}({:d}/{:d})'.
                 format(rmse,
-                       (trend_error/(len(Y_test_inv))),
-                       trend_error, len(Y_test_inv) - 1))
+                       (trend_error/(len(Y_test))),
+                       trend_error, len(Y_test) - 1))
 
 
 
