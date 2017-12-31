@@ -60,8 +60,4 @@ plot.prediction(Y_test, Y_hat,
 
 
 
-
-
-
-
 # hi

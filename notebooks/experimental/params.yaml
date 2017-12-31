@@ -8,16 +8,18 @@ lstm_loss: 'mae'
 lstm_optimizer: 'rmsprop'
 
 #lstm_neurons: 50
-lstm_num_epochs: 20
-lstm_batch_size: 10
-lstm_timesteps: 10
+lstm_num_epochs: 25
+lstm_batch_size: 8
+lstm_timesteps: 4
 lstm_predictions: 1
 
-lstm_numlayers: 2
-lstm_dropout1: 0.1
-lstm_dropout2: 0.1
-lstm_layer1: 128
-lstm_layer2: 128
+lstm_numlayers: 1
+lstm_dropout1: 0.05
+lstm_dropout2: 0.05
+lstm_dropout3: 0.1
+lstm_layer1: 1024
+lstm_layer2: 64
+lstm_layer3: 8
 
 
 validation_ratio: 0.05
@@ -53,4 +55,4 @@ columNames:
   - volumeweightedaverageprice
 #  - dailytime
   - weeklytime
-#  - monthlytime
+  - monthlytime

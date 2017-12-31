@@ -35,7 +35,6 @@ def prediction(Y, Yhat, title):
     setup_plot(title)
     # place the prediction as we did with test_values
     for idx in range(len(Yhat)):
-        #idx += 1
         x = idx
         y = Yhat[idx]
         if idx > 0:
@@ -43,6 +42,10 @@ def prediction(Y, Yhat, title):
             y_trend = numpy.sign(Y[idx]-Y[idx-1])
             error = int(yhat_trend != y_trend)
             color = 'red' if error is 1 else 'green'
+            # print('act[{:d}]={:.02f} -> pred[{:d}]={:.02f} ({:d}); '.
+            #       format((idx-1), Y[idx-1][0], idx, Yhat[idx][0], int(yhat_trend)), end='')
+            # print('act[{:d}]={:.02f} -> act[{:d}]={:.02f} ({:d})'.
+            #       format((idx-1), Y[idx-1][0], idx, Y[idx][0], int(y_trend)))
         else:
             color = 'green'
         plt.plot([x], [y], marker='o', markersize=5, color=color)
