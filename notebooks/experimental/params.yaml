@@ -8,8 +8,8 @@ lstm_loss: 'mae'
 lstm_optimizer: 'rmsprop'
 
 #lstm_neurons: 50
-lstm_num_epochs: 25
-lstm_batch_size: 8
+lstm_num_epochs: 10
+lstm_batch_size: 6
 lstm_timesteps: 4
 lstm_predictions: 1
 

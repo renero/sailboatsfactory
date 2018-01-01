@@ -46,7 +46,9 @@ def build(params):
     print('Adding layer #{:d} [{:d}]'.format(1, params['lstm_layer{:d}'.format(1)]))
     model.add(LSTM(
             params['lstm_layer1'],
-            input_shape=(params['lstm_timesteps'], params['num_features']),
+            stateful=params['lstm_stateful'],
+            batch_input_shape=(params['lstm_batch_size'], params['lstm_timesteps'], params['num_features']),
+            # input_shape=(params['lstm_timesteps'], params['num_features']),
             return_sequences=ret_seq_flag))
     model.add(Dropout(params['lstm_dropout1']))
     # Add additional hidden layers.

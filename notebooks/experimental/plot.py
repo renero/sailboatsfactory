@@ -3,7 +3,8 @@ import numpy
 
 def history(history):
     plt.plot(history.history['loss'], label='train')
-    plt.plot(history.history['val_loss'], label='test')
+    if 'val_loss' in history.history:
+        plt.plot(history.history['val_loss'], label='test')
     plt.legend()
     plt.show()
 
