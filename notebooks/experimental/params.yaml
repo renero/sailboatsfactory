@@ -4,12 +4,14 @@ scaler: MinMaxScaler(feature_range=(0, 1))
 
 lstm_stateful: True
 lstm_shuffle: False
+lstm_forget_bias: True
+lstm_unroll: True
 lstm_loss: 'mae'
 lstm_optimizer: 'rmsprop'
 
 #lstm_neurons: 50
 lstm_num_epochs: 10
-lstm_batch_size: 6
+lstm_batch_size: 4
 lstm_timesteps: 4
 lstm_predictions: 1
 
@@ -22,12 +24,12 @@ lstm_layer2: 64
 lstm_layer3: 8
 
 
+num_testcases: 18
 validation_ratio: 0.05
 diff_intervals: 1
 #look_back: 2
 #look_forward: 1
 #test_numbatches: 1
-num_testcases: 50
 
 keras_verbose_level: 1
 delimiter: '|'

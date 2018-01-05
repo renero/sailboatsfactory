@@ -17,19 +17,6 @@ from yaml import load
 set_random_seed(2)
 seed(2)
 
-def parameters():
-    """
-    Reads a YAML file within the CWD of the current notebook to read all the
-    params from there.
-    """
-    default_path = '/Users/renero/Documents/SideProjects/sailboatsfactory/notebooks/experimental'
-    yaml_file = join(default_path, 'params.yaml')
-    with open(yaml_file, 'r') as f:
-        my_params = load(f)
-    my_params['x_scaler'] = MinMaxScaler(feature_range=(0, 1))
-    my_params['y_scaler'] = MinMaxScaler(feature_range=(0, 1))
-    return my_params
-
 
 def build(params):
     """
@@ -43,11 +30,16 @@ def build(params):
         ret_seq_flag = True
     print('1st layer return sequence: {:s}'.format(str(ret_seq_flag)))
     # Add input layer.
-    print('Adding layer #{:d} [{:d}]'.format(1, params['lstm_layer{:d}'.format(1)]))
+    print('Adding layer #{:d} [{:d}]'
+          .format(1, params['lstm_layer{:d}'.format(1)]))
     model.add(LSTM(
             params['lstm_layer1'],
             stateful=params['lstm_stateful'],
-            batch_input_shape=(params['lstm_batch_size'], params['lstm_timesteps'], params['num_features']),
+            unit_forget_bias=params['lstm_forget_bias'],
+            unroll=params['lstm_unroll'],
+            batch_input_shape=(params['lstm_batch_size'],
+                               params['lstm_timesteps'],
+                               params['num_features']),
             # input_shape=(params['lstm_timesteps'], params['num_features']),
             return_sequences=ret_seq_flag))
     model.add(Dropout(params['lstm_dropout1']))

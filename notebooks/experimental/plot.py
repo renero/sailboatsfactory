@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy
 
+
 def history(history):
     plt.plot(history.history['loss'], label='train')
     if 'val_loss' in history.history:
@@ -44,13 +45,17 @@ def prediction(Y, Yhat, title):
             error = int(yhat_trend != y_trend)
             color = 'red' if error is 1 else 'green'
             # print('act[{:d}]={:.02f} -> pred[{:d}]={:.02f} ({:d}); '.
-            #       format((idx-1), Y[idx-1][0], idx, Yhat[idx][0], int(yhat_trend)), end='')
+            #       format((idx-1), Y[idx-1][0],
+            #              idx, Yhat[idx][0],
+            #              int(yhat_trend)), end='')
             # print('act[{:d}]={:.02f} -> act[{:d}]={:.02f} ({:d})'.
-            #       format((idx-1), Y[idx-1][0], idx, Y[idx][0], int(y_trend)))
+            #       format((idx-1), Y[idx-1][0],
+            #              idx, Y[idx][0],
+            #              int(y_trend)))
         else:
             color = 'green'
         plt.plot([x], [y], marker='o', markersize=5, color=color)
-    plt.plot(Yhat, marker='', color='r', linewidth=1)
+    plt.plot(Yhat, '--', marker='', color='r', linewidth=1)
     plt.plot(Y, marker='o', color='b', linewidth=1.0, alpha=0.5)
     plt.show()
 
@@ -62,7 +67,8 @@ def features(raw_dataset):
     groups = range(num_features - (num_features % 5))
     i = 1
     # plot each column
-    plt.figure(num=None, figsize=(12, 12), dpi=80, facecolor='w', edgecolor='k')
+    plt.figure(num=None, figsize=(12, 12), dpi=80,
+               facecolor='w', edgecolor='k')
     num_rows = int(len(groups)/2)
     num_cols = int(len(groups)/5)
     for group in groups:
