@@ -63,7 +63,7 @@ def adjust(raw, params):
                                          params,
                                          all=True)
     params['num_testcases'] = new_testshape
-    print('New number of test cases:', params['num_testcases'])
+    print('New nr of test cases:', params['num_testcases'])
     new_shape = find_largest_divisor(raw.shape[0],
                                      params['lstm_batch_size'],
                                      params,

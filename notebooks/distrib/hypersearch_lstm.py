@@ -32,6 +32,6 @@ for bs in [1, 2, 4, 6, 8]:
             epochs=params['lstm_num_epochs'])
         Y_hat = model.predict(X_test, batch_size=params['lstm_batch_size'])
         rmse, trend_error = compute.error(Y_test, Y_hat)
-        print('ts:{:d}, bs:{:d}, t.e.:{:.02f}, epochs:{:d}'
+        print('bs:{:d}, ts:{:d}, t.e.:{:.02f}, epochs:{:d}'
               .format(ts, bs, trend_error, params['lstm_num_epochs']),
               file=open('output_{:d}.txt'.format(getpid()), "a"))
