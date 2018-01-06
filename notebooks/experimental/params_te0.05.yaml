@@ -9,7 +9,6 @@ lstm_unroll: False
 lstm_loss: 'mae'
 lstm_optimizer: 'rmsprop'
 
-#lstm_neurons: 50
 lstm_num_epochs: 10
 lstm_batch_size: 6
 lstm_timesteps: 8

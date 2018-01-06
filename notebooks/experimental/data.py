@@ -1,14 +1,6 @@
-from os.path import join
-from os import getcwd
-from pandas import read_csv, concat, DataFrame
-from yaml import load
-
+from pandas import read_csv
+from numpy import empty
 import numpy as np
-
-from random import randint
-from random import uniform
-from numpy import array, empty
-from numpy.random import seed
 
 
 def read(my_params):
@@ -26,7 +18,8 @@ def read(my_params):
 def diff(a, interval=1):
     """
     Given a 2D array (a), compute the one resulting from differentiating each
-    element by the one at "interval" distance from it, only for the first column:
+    element by the one at "interval" distance from it, only for the first
+    column:
 
     [  1.   1.]
     [  2.   2.]  =>  [ 1.   2.]
@@ -59,7 +52,8 @@ def inverse_diff(a_diff, a, interval=1):
 
 
 def split(X, Y, num_testcases):
-    return X[:-num_testcases, ], Y[:-num_testcases, ], X[-num_testcases:, ], Y[-num_testcases:, ]
+    return X[:-num_testcases, ], Y[:-num_testcases, ], \
+            X[-num_testcases:, ], Y[-num_testcases:, ]
 
 
 def prepare(raw, params):
@@ -71,7 +65,8 @@ def prepare(raw, params):
 
     For num_timesteps=2, 3 features on each row, and making 1 prediction in
     the future, the original raw data (5 x 3) is transformed into:
-    --> (3 x (2+1) x 3) = (num_frames x (num_timesteps + num_predictions) x num_features):
+    --> (3 x (2+1) x 3) =
+        (num_frames x (num_timesteps + num_predictions) x num_features):
 
     [1,2,3]     ------- X ------ -- Y --
     [1,4,5]     [[1,2,3],[1,4,5],[2,_,_]]
@@ -97,9 +92,12 @@ def prepare(raw, params):
     Y = empty((num_frames, num_predictions))
     for i in range(num_samples - num_timesteps):
         X[i] = non_stationary[i:i + num_timesteps, ]
-        Y[i] = non_stationary[i + num_timesteps:i + num_timesteps + num_predictions, 0]
+        Y[i] = non_stationary[
+                i + num_timesteps:i + num_timesteps + num_predictions, 0
+               ]
     # Scale and remove the last element --don't know why it's with zeroes.
-    X_scaled = np.array([params['x_scaler'].fit_transform(X[i]) for i in range(X.shape[0])])
+    X_scaled = np.array([params['x_scaler'].fit_transform(X[i])
+                        for i in range(X.shape[0])])
     Y_scaled = params['y_scaler'].fit_transform(Y)
     # Split in training and test
     return split(X_scaled, Y_scaled, params['num_testcases'])
@@ -116,4 +114,3 @@ def recover_Ytest(Y_test, raw, params):
                 y_unscaled,
                 raw[-(params['num_testcases']+1):, 0:1])
     return y_undiff[-params['num_testcases']:]
-#
