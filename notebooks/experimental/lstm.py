@@ -1,3 +1,5 @@
+from datetime import datetime
+from keras.models import load_model
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout
 from numpy.random import seed
@@ -47,3 +49,29 @@ def build(params):
     model.add(Dense(params['lstm_predictions']))
     model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
     return model
+
+
+def fit(model, X_train, Y_train, params):
+    """
+    Train the model passed as 1st argument, and return the train_loss
+    X and Y Training values are passed.
+    Parameters dictionary is also necessary.
+    """
+    train_loss = model.fit(
+                         X_train, Y_train,
+                         verbose=params['keras_verbose_level'],
+                         shuffle=params['lstm_shuffle'],
+                         batch_size=params['lstm_batch_size'],
+                         epochs=params['lstm_num_epochs'])
+    return train_loss
+
+
+def save(model):
+    dt = datetime.now()
+    name = '{0:%Y}{0:%m}{0:%d}_{0:%I}{0:%M}.h5'.format(dt)
+    model.save(name)
+    return name
+
+
+def load(name):
+    return load_model(name)

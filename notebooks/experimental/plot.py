@@ -33,7 +33,9 @@ def setup_plot(title):
     plt.title(title)
 
 
-def prediction(Y, Yhat, title):
+def prediction(Y, Yhat, num_errors):
+    title = 'T.E={:.02f}({:d}/{:d})'.format(
+        (num_errors/(len(Yhat))), num_errors, len(Yhat) - 1)
     setup_plot(title)
     # place the prediction as we did with test_values
     for idx in range(len(Yhat)):

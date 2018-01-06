@@ -19,14 +19,14 @@ lstm_dropout1: 0.05
 lstm_dropout2: 0.05
 lstm_dropout3: 0.1
 lstm_layer1: 1024
-lstm_layer2: 64
+lstm_layer2: 512
 lstm_layer3: 8
 
 num_testcases: 18
 validation_ratio: 0.05
 diff_intervals: 1
 
-keras_verbose_level: 2
+keras_verbose_level: 1
 delimiter: '|'
 columNames:
   - tickcloseprice

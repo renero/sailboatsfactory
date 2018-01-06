@@ -23,23 +23,18 @@ X_train, Y_train, X_test, Y_test = data.prepare(adjusted, params)
 
 # Build the model and train it.
 model = lstm.build(params)
-train_loss = model.fit(
-                     X_train, Y_train,
-                     shuffle=params['lstm_shuffle'],
-                     batch_size=params['lstm_batch_size'],
-                     epochs=params['lstm_num_epochs'])
+train_loss = lstm.fit(model, X_train, Y_train, params)
 plot.history(train_loss)
 
 # Plot the test values for Y, and Y_hat, without scaling (inverted)
 Y_hat = model.predict(X_test, batch_size=params['lstm_batch_size'])
-plot.curves(params['y_scaler'].inverse_transform(Y_test),
-            params['y_scaler'].inverse_transform(Y_hat),
-            labels=['Y_test', 'prediction'])
+# Compute the error
+rmse, num_errors = compute.error(Y_test, Y_hat)
+# Plot the prediction
+plot.prediction(params['y_scaler'].inverse_transform(Y_test),
+                params['y_scaler'].inverse_transform(Y_hat),
+                num_errors)
 
-# Compute the error and plot the predictions.
-rmse, trend_error = compute.error(Y_test, Y_hat)
-plot.prediction(Y_test, Y_hat,
-                title='RMSE={:.02f}, T.E={:.02f}({:d}/{:d})'.
-                format(rmse,
-                       (trend_error/(len(Y_test))),
-                       trend_error, len(Y_test) - 1))
+# Save the model
+saved_model_name = lstm.save(model)
+# model = lstm.load('20180106_0114.h5')
