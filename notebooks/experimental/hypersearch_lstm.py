@@ -32,7 +32,7 @@ for bs in [8, 10, 12, 14, 16]:
         Y_hat = model.predict(X_test, batch_size=params['lstm_batch_size'])
         rmse, num_errors = compute.error(Y_test, Y_hat)
         te = (num_errors / (len(Y_hat)-1))
-        print('{:d};{:d};{:d};{:.02f}{:d}'
+        print('{:d};{:d};{:.02f};{:d};{:d}'
               .format(bs, ts, te, (len(Y_hat)-1), params['lstm_num_epochs']),
               file=open('output_{:d}.txt'.format(getpid()), "a"))
         if te <= 0.15:

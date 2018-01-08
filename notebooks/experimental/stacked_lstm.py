@@ -8,6 +8,11 @@ import parameters
 import plot
 
 
+%matplotlib inline
+%load_ext autoreload
+%autoreload 2
+
+
 # Initialization of seeds
 set_random_seed(2)
 seed(2)
@@ -29,9 +34,7 @@ plot.history(train_loss)
 
 # Plot the test values for Y, and Y_hat, without scaling (inverted)
 Y_hat = model.predict(X_test, batch_size=params['lstm_batch_size'])
-# Compute the error
 rmse, num_errors = compute.error(Y_test, Y_hat)
-# Plot the prediction
 plot.prediction(params['y_scaler'].inverse_transform(Y_test),
                 params['y_scaler'].inverse_transform(Y_hat),
                 num_errors)

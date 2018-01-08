@@ -15,8 +15,8 @@ def read():
     yaml_file = join(params_path, 'params.yaml')
     with open(yaml_file, 'r') as f:
         my_params = load(f)
-    my_params['x_scaler'] = MinMaxScaler(feature_range=(0, 1))
-    my_params['y_scaler'] = MinMaxScaler(feature_range=(0, 1))
+    my_params['x_scaler'] = MinMaxScaler(feature_range=(-1, 1))
+    my_params['y_scaler'] = MinMaxScaler(feature_range=(-1, 1))
     return my_params
 
 
