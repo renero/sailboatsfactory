@@ -1,6 +1,7 @@
 from os.path import join
-from yaml import load
+from pathlib import Path
 from sklearn.preprocessing import MinMaxScaler
+from yaml import load
 
 
 def read():
@@ -8,7 +9,7 @@ def read():
     Reads a YAML file within the CWD of the current notebook to read all the
     params from there.
     """
-    home_path = '/Users/renero'
+    home_path = str(Path.home())
     project_path = 'Documents/SideProjects/sailboatsfactory'
     work_path = 'notebooks/experimental'
     params_path = join(home_path, join(project_path, work_path))

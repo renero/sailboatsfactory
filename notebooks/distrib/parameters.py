@@ -1,6 +1,7 @@
 from os.path import join
-from yaml import load
+from pathlib import Path
 from sklearn.preprocessing import MinMaxScaler
+from yaml import load
 
 
 def read():
@@ -8,15 +9,15 @@ def read():
     Reads a YAML file within the CWD of the current notebook to read all the
     params from there.
     """
-    home_path = '/Users/renero'
+    home_path = str(Path.home())
     project_path = 'Documents/SideProjects/sailboatsfactory'
     work_path = 'notebooks/experimental'
     params_path = join(home_path, join(project_path, work_path))
     yaml_file = join(params_path, 'params.yaml')
     with open(yaml_file, 'r') as f:
         my_params = load(f)
-    my_params['x_scaler'] = MinMaxScaler(feature_range=(0, 1))
-    my_params['y_scaler'] = MinMaxScaler(feature_range=(0, 1))
+    my_params['x_scaler'] = MinMaxScaler(feature_range=(-1, 1))
+    my_params['y_scaler'] = MinMaxScaler(feature_range=(-1, 1))
     return my_params
 
 
@@ -63,7 +64,7 @@ def adjust(raw, params):
                                          params,
                                          all=True)
     params['num_testcases'] = new_testshape
-    print('New nr of test cases:', params['num_testcases'])
+    print('Adjusted number of test cases:', params['num_testcases'])
     new_shape = find_largest_divisor(raw.shape[0],
                                      params['lstm_batch_size'],
                                      params,

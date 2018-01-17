@@ -1,7 +1,7 @@
 from datetime import datetime
 from keras.models import load_model
 from keras.models import Sequential
-from keras.layers import LSTM, Dense, Dropout
+from keras.layers import LSTM, Dense, Dropout, Activation
 from numpy.random import seed
 from tensorflow import set_random_seed
 
@@ -46,7 +46,9 @@ def build(params):
         model.add(Dropout(params['lstm_dropout{:d}'.format(layer+1)]))
 
     # Output layer.
-    model.add(Dense(params['lstm_predictions']))
+    model.add(Dense(input_dim=64, output_dim=1))  # <- this is under test.
+    # model.add(Dense(params['lstm_predictions']))
+    model.add(Activation('linear'))
     model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
     return model
 
@@ -69,7 +71,7 @@ def fit(model, X_train, Y_train, params):
 def save(model):
     dt = datetime.now()
     name = '{0:%Y}{0:%m}{0:%d}_{0:%I}{0:%M}.h5'.format(dt)
-    model.save(name)
+    model.save_weights(name)
     return name
 
 
