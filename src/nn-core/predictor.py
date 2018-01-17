@@ -32,7 +32,7 @@ model = lstm.build(params)
 
 # load weights into new model
 print("Loading weights from disk...")
-model.load_weights("../../data/networks/20180117_0830.h5")
+model.load_weights("../../data/networks/20180117_1200.h5")
 
 # Takes the input vector, to make a prediction.
 input_shape = (1, params['lstm_timesteps'], len(params['columNames']))

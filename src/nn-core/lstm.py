@@ -1,5 +1,5 @@
 from datetime import datetime
-from keras.models import load_model
+from keras.models import load_model, model_from_json
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout, Activation
 from numpy.random import seed
@@ -87,5 +87,20 @@ def save(model):
     return (model_name, net_name)
 
 
-def load(name):
-    return load_model(name)
+def load(name, params):
+    print("Loading model from disk")
+
+    home_path = str(Path.home())
+    project_path = 'Documents/SideProjects/sailboatsfactory'
+    load_folder = join(join(home_path, project_path), 'data/networks')
+
+    # load json and create model
+    json_file = open(join(load_folder, '{}.json'.format(name)), 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+
+    # load weights into new model
+    loaded_model.load_weights(join(load_folder, '{}.h5'.format(name)))
+    loaded_model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
+    return loaded_model
