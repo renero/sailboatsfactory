@@ -27,8 +27,9 @@ adjusted = parameters.adjust(raw, params)
 X_train, Y_train, X_test, Y_test = data.prepare(adjusted, params)
 
 # Build the model and train it.
-# model = lstm.load('../../data/networks/20180115_0832.h5')
+# model = lstm.load('../../data/networks/20180116_0438.h5')
 model = lstm.build(params)
+model.load_weights("../../data/networks/20180116_0438.h5")
 train_loss = lstm.fit(model, X_train, Y_train, params)
 plot.history(train_loss)
 
@@ -40,16 +41,4 @@ plot.prediction(params['y_scaler'].inverse_transform(Y_test),
                 num_errors)
 
 # Save the model
-saved_model_name = lstm.save(model)
-
-# How to make a prediction
-# We need a vector of size (timesteps x num_features)
-# That vector is replicated 'batch_size' times, and feed into the network
-# The result is an array o 'batch_size' predictions, and we're only interested
-# in the first one, which is the one we give back
-p = repeat(X_test[0], 8).reshape((8, 6, 8))
-p.shape
-model.predict(p)[0]
-Y_hat[0]
-
-# The results DO NOT match...
+(model_name, net_name) = lstm.save(model)

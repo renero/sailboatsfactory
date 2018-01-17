@@ -11,7 +11,7 @@ def read():
     """
     home_path = str(Path.home())
     project_path = 'Documents/SideProjects/sailboatsfactory'
-    work_path = 'notebooks/experimental'
+    work_path = 'src/nn-core'
     params_path = join(home_path, join(project_path, work_path))
     yaml_file = join(params_path, 'params.yaml')
     with open(yaml_file, 'r') as f:

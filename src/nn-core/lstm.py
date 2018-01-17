@@ -4,6 +4,8 @@ from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout, Activation
 from numpy.random import seed
 from tensorflow import set_random_seed
+from os.path import join
+from pathlib import Path
 
 
 # Initialization of seeds
@@ -21,7 +23,6 @@ def build(params):
     ret_seq_flag = False
     if params['lstm_numlayers'] > 1:
         ret_seq_flag = True
-    print('1st layer return sequence: {:s}'.format(str(ret_seq_flag)))
     # Add input layer.
     print('Adding layer #{:d} [{:d}]'
           .format(1, params['lstm_layer{:d}'.format(1)]))
@@ -46,7 +47,8 @@ def build(params):
         model.add(Dropout(params['lstm_dropout{:d}'.format(layer+1)]))
 
     # Output layer.
-    model.add(Dense(input_dim=64, output_dim=1))  # <- this is under test.
+    # model.add(Dense(input_dim=64, output_dim=1))  # <- this is under test.
+    model.add(Dense(units=1, input_dim=64))  # <- this is under test. (Keras API updated)
     # model.add(Dense(params['lstm_predictions']))
     model.add(Activation('linear'))
     model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
@@ -69,10 +71,20 @@ def fit(model, X_train, Y_train, params):
 
 
 def save(model):
+    home_path = str(Path.home())
+    project_path = 'Documents/SideProjects/sailboatsfactory'
+    save_folder = join(join(home_path, project_path), 'data/networks')
     dt = datetime.now()
-    name = '{0:%Y}{0:%m}{0:%d}_{0:%I}{0:%M}.h5'.format(dt)
-    model.save_weights(name)
-    return name
+    base_name = '{0:%Y}{0:%m}{0:%d}_{0:%I}{0:%M}'.format(dt)
+    net_name = join(save_folder, '{}.h5'.format(base_name))
+    model_name = join(save_folder, '{}.json'.format(base_name))
+
+    model_json = model.to_json()
+    with open(model_name, "w") as json_file:
+        json_file.write(model_json)
+    model.save_weights(net_name)
+
+    return (model_name, net_name)
 
 
 def load(name):
