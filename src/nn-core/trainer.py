@@ -20,15 +20,16 @@ seed(2)
 # Read the parameters, dataset and then adjust everything
 # to produce the training and test sets with the correct
 # batch size splits.
-params = parameters.read()
+params = parameters.read('params_other_indicators.yaml')
 raw = data.read(params)
 print('Original dataset num samples:', raw.shape)
 adjusted = parameters.adjust(raw, params)
 X_train, Y_train, X_test, Y_test = data.prepare(adjusted, params)
 
 # Load/Build the model and train it.
-model = lstm.load('20180117_1200', params)
-# model = lstm.build(params)
+# model = lstm.load('20180117_1200', params)
+model = lstm.build(params)
+
 train_loss = lstm.fit(model, X_train, Y_train, params)
 plot.history(train_loss)
 

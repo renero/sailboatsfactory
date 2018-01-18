@@ -1,11 +1,17 @@
 from datetime import datetime
-from keras.models import load_model, model_from_json
+from keras.models import model_from_json
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout, Activation
 from numpy.random import seed
+from numpy import zeros
 from tensorflow import set_random_seed
 from os.path import join
 from pathlib import Path
+
+
+import compute
+import data
+import parameters
 
 
 # Initialization of seeds
@@ -13,7 +19,7 @@ set_random_seed(2)
 seed(2)
 
 
-def build(params):
+def build(params, save_predictor=True):
     """
     Build the LSTM according to the parameters passed. The general
     architecture is set in the code.
@@ -52,6 +58,16 @@ def build(params):
     # model.add(Dense(params['lstm_predictions']))
     model.add(Activation('linear'))
     model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
+
+    # Build the predictor model, with batch_size = 1, and save it.
+    if save_predictor is True:
+        bs = params['lstm_batch_size']
+        params['lstm_batch_size'] = 1
+        pred_model = build(params)
+        save(pred_model, prefix='pred_', save_weights=False)
+        params['lstm_batch_size'] = bs
+        del pred_model
+
     return model
 
 
@@ -68,6 +84,51 @@ def fit(model, X_train, Y_train, params):
                          batch_size=params['lstm_batch_size'],
                          epochs=params['lstm_num_epochs'])
     return train_loss
+
+
+def single_predict(model, x_test, y_test, params):
+    """
+    Make a prediction for a single of input values, by saturating the lstm
+    returns the prediction, unscaled.
+    """
+    # Takes the input vector, to make a prediction.
+    input_shape = (1, params['lstm_timesteps'], len(params['columNames']))
+    input_vector = x_test.reshape(input_shape)
+    # Make a prediction by repeating the process 'n' times (n ~ timesteps.)
+    for k in range(0, params['lstm_timesteps']):
+        y_hat = model.predict(input_vector, batch_size=1)
+    return y_hat
+
+
+def range_predict(model, X_test, Y_test, params):
+    """
+    Make a prediction for a range of input values, by saturating the lstm
+    returns the predictions (unscaled) and the number of errors
+    """
+    input_shape = (1, params['lstm_timesteps'], len(params['columNames']))
+    preds = zeros(X_test.shape[0])
+    for i in range(0, X_test.shape[0]):
+        input_vector = X_test[i].reshape(input_shape)
+        # Make a prediction, saturating
+        for k in range(0, params['lstm_timesteps']):
+            y_hat = model.predict(input_vector, batch_size=params['lstm_batch_size'])
+        preds[i] = y_hat
+    rmse, num_errors = compute.error(Y_test, preds)
+    return (preds, num_errors)
+
+
+def predict(params_filename, net_name):
+    """
+    From a parameters file and a network name (model and weights), builds a prediction
+    vector, which is returned together with the number of tendency errors found
+    """
+    params = parameters.read(params_filename)
+    raw = data.read(params)
+    adjusted = parameters.adjust(raw, params)
+    _, _, X_test, Y_test = data.prepare(adjusted, params)
+    model1 = load(net_name, params, prefix='pred_')
+    (yhat, num_errors) = range_predict(model1, X_test, Y_test, params)
+    return (Y_test, yhat, num_errors)
 
 
 def save(model, name='', prefix='', save_weights=True):
