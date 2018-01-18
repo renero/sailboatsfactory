@@ -70,7 +70,7 @@ def fit(model, X_train, Y_train, params):
     return train_loss
 
 
-def save(model, prefix='', save_weights=True):
+def save(model, name='', prefix='', save_weights=True):
     """
     Save the model and (by default) the weights too. If the parameter
     'save_weights' is set to False, only the model is saved.
@@ -81,9 +81,12 @@ def save(model, prefix='', save_weights=True):
     project_path = 'Documents/SideProjects/sailboatsfactory'
     save_folder = join(join(home_path, project_path), 'data/networks')
     dt = datetime.now()
-    base_name = '{0:%Y}{0:%m}{0:%d}_{0:%I}{0:%M}'.format(dt)
+    if name is '':
+        base_name = '{0:%Y}{0:%m}{0:%d}_{0:%I}{0:%M}'.format(dt)
+    else:
+        base_name = name
     net_name = join(save_folder, '{}.h5'.format(base_name))
-    model_name = join(save_folder, (prefix + '_' + '{}.json'.format(base_name)))
+    model_name = join(save_folder, (prefix + '{}.json'.format(base_name)))
     # Save the model
     model_json = model.to_json()
     with open(model_name, "w") as json_file:

@@ -33,7 +33,7 @@ input_vector = X_test[31].reshape(input_shape)
 # Take what is the actual response.
 output_value = Y_test[31]
 print('Actual value:', params['y_scaler'].inverse_transform(output_value))
-# Make a prediction
+# Make a prediction by repeating the process 'n' times (n ~ timesteps.)
 for k in range(0, 5):
     y_hat = model.predict(input_vector, batch_size=params['lstm_batch_size'])
     print('Prediction:', params['y_scaler'].inverse_transform(y_hat))
