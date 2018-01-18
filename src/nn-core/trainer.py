@@ -27,7 +27,7 @@ adjusted = parameters.adjust(raw, params)
 X_train, Y_train, X_test, Y_test = data.prepare(adjusted, params)
 
 # Load/Build the model and train it.
-model = lstm.load('20180117_0830', params)
+model = lstm.load('20180117_1200', params)
 # model = lstm.build(params)
 train_loss = lstm.fit(model, X_train, Y_train, params)
 plot.history(train_loss)

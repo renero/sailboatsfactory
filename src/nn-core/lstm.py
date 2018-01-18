@@ -48,7 +48,7 @@ def build(params):
 
     # Output layer.
     # model.add(Dense(input_dim=64, output_dim=1))  # <- this is under test.
-    model.add(Dense(units=1, input_dim=64))  # <- this is under test. (Keras API updated)
+    model.add(Dense(units=1, input_dim=64))  # <- this is under test.
     # model.add(Dense(params['lstm_predictions']))
     model.add(Activation('linear'))
     model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
@@ -70,37 +70,49 @@ def fit(model, X_train, Y_train, params):
     return train_loss
 
 
-def save(model):
+def save(model, prefix='', save_weights=True):
+    """
+    Save the model and (by default) the weights too. If the parameter
+    'save_weights' is set to False, only the model is saved.
+    'prefix' is used to generate the name of the files, and is prepended
+    to the data and extension to be used.
+    """
     home_path = str(Path.home())
     project_path = 'Documents/SideProjects/sailboatsfactory'
     save_folder = join(join(home_path, project_path), 'data/networks')
     dt = datetime.now()
     base_name = '{0:%Y}{0:%m}{0:%d}_{0:%I}{0:%M}'.format(dt)
     net_name = join(save_folder, '{}.h5'.format(base_name))
-    model_name = join(save_folder, '{}.json'.format(base_name))
-
+    model_name = join(save_folder, (prefix + '_' + '{}.json'.format(base_name)))
+    # Save the model
     model_json = model.to_json()
     with open(model_name, "w") as json_file:
         json_file.write(model_json)
-    model.save_weights(net_name)
-
+    # Save the weights
+    if save_weights is True:
+        model.save_weights(net_name)
     return (model_name, net_name)
 
 
-def load(name, params):
-    print("Loading model from disk")
-
+def load(name, params, prefix='', load_weights=True):
+    """
+    Loads a model from file, and by default, also the weights.
+    The model is compiled according to the parameters specified
+    in the 'params' dictionary.
+    """
     home_path = str(Path.home())
-    project_path = 'Documents/SideProjects/sailboatsfactory'
-    load_folder = join(join(home_path, project_path), 'data/networks')
-
+    load_folder = join(join(home_path, params['project_path']),
+                       params['networks_path'])
     # load json and create model
-    json_file = open(join(load_folder, '{}.json'.format(name)), 'r')
+    json_file = open(join(load_folder,
+                     (prefix + '{}.json'.format(name))), 'r')
     loaded_model_json = json_file.read()
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
-
     # load weights into new model
-    loaded_model.load_weights(join(load_folder, '{}.h5'.format(name)))
-    loaded_model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
+    if load_weights is True:
+        loaded_model.load_weights(join(load_folder, '{}.h5'.format(name)))
+    loaded_model.compile(
+        loss=params['lstm_loss'],
+        optimizer=params['lstm_optimizer'])
     return loaded_model

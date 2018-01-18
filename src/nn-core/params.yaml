@@ -1,4 +1,7 @@
-file_path: '~/Documents/SideProjects/sailboatsfactory/data/ibex_hourly_1y_rounded.csv'
+project_path: 'Documents/SideProjects/sailboatsfactory'
+data_path: 'data'
+networks_path: 'data/networks'
+training_file: 'ibex_hourly_1y_rounded.csv'
 
 scaler: MinMaxScaler(feature_range=(0, 1))
 

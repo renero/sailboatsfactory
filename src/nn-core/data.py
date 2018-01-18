@@ -1,17 +1,23 @@
 from pandas import read_csv
 from numpy import empty
 import numpy as np
+from pathlib import Path
+from os.path import join
 
 
-def read(my_params):
+def read(params):
+    home_path = str(Path.home())
+    load_folder = join(join(home_path, params['project_path']),
+                       params['data_path'])
+    file_name = join(load_folder, params['training_file'])
     raw_dataset = read_csv(
-        my_params['file_path'],
+        file_name,
         header='infer',
-        delimiter=my_params['delimiter'],
-        usecols=my_params['columNames'])
+        delimiter=params['delimiter'],
+        usecols=params['columNames'])
     # Remove the first column as it contains the value we want to predict
     # dataset = raw_dataset.iloc[:, 1:]
-    my_params['raw_numrows'] = raw_dataset.shape[0]
+    params['raw_numrows'] = raw_dataset.shape[0]
     return (raw_dataset)
 
 
