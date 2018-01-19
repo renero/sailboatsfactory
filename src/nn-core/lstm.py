@@ -59,15 +59,6 @@ def build(params, save_predictor=True):
     model.add(Activation('linear'))
     model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
 
-    # Build the predictor model, with batch_size = 1, and save it.
-    if save_predictor is True:
-        bs = params['lstm_batch_size']
-        params['lstm_batch_size'] = 1
-        pred_model = build(params)
-        save(pred_model, prefix='pred_', save_weights=False)
-        params['lstm_batch_size'] = bs
-        del pred_model
-
     return model
 
 
@@ -117,13 +108,13 @@ def range_predict(model, X_test, Y_test, params):
     return (preds, num_errors)
 
 
-def predict(params_filename, net_name):
+def predict(params_filename, net_name, dataset_name=''):
     """
     From a parameters file and a network name (model and weights), builds a prediction
     vector, which is returned together with the number of tendency errors found
     """
     params = parameters.read(params_filename)
-    raw = data.read(params)
+    raw = data.read(params, dataset_name)
     adjusted = parameters.adjust(raw, params)
     _, _, X_test, Y_test = data.prepare(adjusted, params)
     model1 = load(net_name, params, prefix='pred_')

@@ -12,14 +12,18 @@ lstm_unroll: False
 lstm_loss: 'mse'
 lstm_optimizer: 'rmsprop'
 
-lstm_num_epochs: 40
+lstm_num_epochs: 20
 lstm_batch_size: 8
 lstm_timesteps: 6
 lstm_predictions: 1
 
 lstm_numlayers: 1
 lstm_dropout1: 0.075
-lstm_layer1: 1536
+lstm_dropout2: 0.075
+lstm_dropout3: 0.2
+lstm_layer1: 2048
+lstm_layer2: 512
+lstm_layer3: 256
 
 num_testcases: 32
 validation_ratio: 0.05
@@ -35,21 +39,21 @@ columNames:
   - tickmaxprice
   - tickvolume
   - awesome
-#  - macd
-#  - rsi
-#  - rsi2
-#  - exponentialmovingaverage
-#  - moneyflowindicator
-#  - moneyflowindicator2
-#  - bollingermid
-#  - bollingerlow
-#  - bollingerupper
-#  - stochastick
-#  - stochasticd
-#  - stochasticrsi
+  - macd
+  - rsi
+  - rsi2
+  - exponentialmovingaverage
+  - moneyflowindicator
+  - moneyflowindicator2
+  - bollingermid
+  - bollingerlow
+  - bollingerupper
+  - stochastick
+  - stochasticd
+  - stochasticrsi
   - positivevolumeindex
   - negativevolumeindex
-#  - volumeweightedaverageprice
-#  - dailytime
-#  - weeklytime
-#  - monthlytime
+  - volumeweightedaverageprice
+  - dailytime
+  - weeklytime
+  - monthlytime

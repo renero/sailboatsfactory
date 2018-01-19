@@ -5,18 +5,23 @@ from pathlib import Path
 from os.path import join
 
 
-def read(params):
+def read(params, dataset_file=''):
+    """
+    If dataset_file is specified then whatever training_file is specified
+    in the parameter dictionary is override by it.
+    """
     home_path = str(Path.home())
     load_folder = join(join(home_path, params['project_path']),
                        params['data_path'])
-    file_name = join(load_folder, params['training_file'])
+    if dataset_file is '':
+        file_name = join(load_folder, params['training_file'])
+    else:
+        file_name = join(load_folder, dataset_file)
     raw_dataset = read_csv(
         file_name,
         header='infer',
         delimiter=params['delimiter'],
         usecols=params['columNames'])
-    # Remove the first column as it contains the value we want to predict
-    # dataset = raw_dataset.iloc[:, 1:]
     params['raw_numrows'] = raw_dataset.shape[0]
     return (raw_dataset)
 
