@@ -1,9 +1,7 @@
 project_path: 'Documents/SideProjects/sailboatsfactory'
 data_path: 'data'
 networks_path: 'data/networks'
-training_file: 'ibex_1hr_2y_rounded.csv'
-
-scaler: MinMaxScaler(feature_range=(0, 1))
+training_file: 'ibex_1hr_2y.csv'
 
 lstm_stateful: True
 lstm_shuffle: False
@@ -35,21 +33,6 @@ columNames:
   - tickmaxprice
   - tickvolume
   - awesome
-#  - macd
-#  - rsi
-#  - rsi2
-#  - exponentialmovingaverage
-#  - moneyflowindicator
-#  - moneyflowindicator2
-#  - bollingermid
-#  - bollingerlow
-#  - bollingerupper
-#  - stochastick
-#  - stochasticd
-#  - stochasticrsi
+  - macd
   - positivevolumeindex
   - negativevolumeindex
-#  - volumeweightedaverageprice
-#  - dailytime
-#  - weeklytime
-#  - monthlytime

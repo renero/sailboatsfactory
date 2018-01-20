@@ -1,9 +1,7 @@
 project_path: 'Documents/SideProjects/sailboatsfactory'
 data_path: 'data'
 networks_path: 'data/networks'
-training_file: 'ibex_hourly_1y_rounded.csv'
-
-scaler: MinMaxScaler(feature_range=(0, 1))
+training_file: 'ibex_1hr_2y.csv'
 
 lstm_stateful: True
 lstm_shuffle: False
@@ -12,18 +10,14 @@ lstm_unroll: False
 lstm_loss: 'mse'
 lstm_optimizer: 'rmsprop'
 
-lstm_num_epochs: 40
+lstm_num_epochs: 20
 lstm_batch_size: 8
 lstm_timesteps: 6
 lstm_predictions: 1
 
 lstm_numlayers: 1
 lstm_dropout1: 0.075
-lstm_dropout2: 0.075
-lstm_dropout3: 0.2
-lstm_layer1: 1536
-lstm_layer2: 512
-lstm_layer3: 256
+lstm_layer1: 2048
 
 num_testcases: 32
 validation_ratio: 0.05
@@ -41,10 +35,10 @@ columNames:
   - awesome
   - macd
   - rsi
-#  - rsi2
+  - rsi2
   - exponentialmovingaverage
   - moneyflowindicator
-#  - moneyflowindicator2
+  - moneyflowindicator2
   - bollingermid
   - bollingerlow
   - bollingerupper
@@ -57,3 +51,8 @@ columNames:
   - dailytime
   - weeklytime
   - monthlytime
+  - coppockcurve
+  - avgdirmov
+  - dirmovminus
+  - dirmovplus
+  - chaikinmoneyflow

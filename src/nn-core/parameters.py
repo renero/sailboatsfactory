@@ -14,6 +14,7 @@ def read(filename='params.yaml'):
     work_path = 'src/nn-core'
     params_path = join(home_path, join(project_path, work_path))
     yaml_file = join(params_path, filename)
+    print("Reading parameters from:", filename)
     with open(yaml_file, 'r') as f:
         my_params = load(f)
     my_params['x_scaler'] = MinMaxScaler(feature_range=(-1, 1))
@@ -68,4 +69,6 @@ def adjust(raw, params):
                                      params['lstm_batch_size'],
                                      params,
                                      all=False)
+    print('Reshaping raw from [{}] to [{}]'.
+          format(raw.shape, raw[-new_shape:].shape))
     return raw[-new_shape:]

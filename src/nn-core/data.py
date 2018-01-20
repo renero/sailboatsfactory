@@ -14,8 +14,10 @@ def read(params, dataset_file=''):
     load_folder = join(join(home_path, params['project_path']),
                        params['data_path'])
     if dataset_file is '':
+        print("Reading dataset:", params['training_file'])
         file_name = join(load_folder, params['training_file'])
     else:
+        print("Reading dataset:", dataset_file)
         file_name = join(load_folder, dataset_file)
     raw_dataset = read_csv(
         file_name,
@@ -63,8 +65,18 @@ def inverse_diff(a_diff, a, interval=1):
 
 
 def split(X, Y, num_testcases):
-    return X[:-num_testcases, ], Y[:-num_testcases, ], \
-            X[-num_testcases:, ], Y[-num_testcases:, ]
+    """
+    Splits X, Y horizontally to separate training from test, as specified
+    by the number of test cases.
+    """
+    print('Splitting {:d} test cases'.format(num_testcases))
+    X_train = X[:-num_testcases, ]
+    Y_train = Y[:-num_testcases, ]
+    X_test = X[-num_testcases:, ]
+    Y_test = Y[-num_testcases:, ]
+    print('X_train[{}], Y_train[{}]'.format(X_train.shape, Y_train.shape))
+    print('X_test[{}], Y_test[{}]'.format(X_test.shape, Y_test.shape))
+    return X_train, Y_train, X_test, Y_test
 
 
 def prepare(raw, params):
@@ -86,7 +98,9 @@ def prepare(raw, params):
     [5,3,8]
     """
     # Diff, first of all.
+    raw['tickcloseprice'] = np.log(raw.tickcloseprice)
     non_stationary = np.array((diff(raw.values)))
+
     # Setup the windowing of the dataset.
     num_samples = non_stationary.shape[0]
     num_features = non_stationary.shape[1]
@@ -101,12 +115,13 @@ def prepare(raw, params):
     # Build the 3D array (num_frames, num_timesteps, num_features)
     X = empty((num_frames, num_timesteps, num_features))
     Y = empty((num_frames, num_predictions))
+    print('X[{}], Y[{}]'.format(X.shape, Y.shape))
     for i in range(num_samples - num_timesteps):
         X[i] = non_stationary[i:i + num_timesteps, ]
         Y[i] = non_stationary[
                 i + num_timesteps:i + num_timesteps + num_predictions, 0
                ]
-    # Scale and remove the last element --don't know why it's with zeroes.
+    # Scale
     X_scaled = np.array([params['x_scaler'].fit_transform(X[i])
                         for i in range(X.shape[0])])
     Y_scaled = params['y_scaler'].fit_transform(Y)
