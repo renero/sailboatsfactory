@@ -1,3 +1,4 @@
+import pandas
 from pandas import read_csv
 from numpy import empty
 import numpy as np
@@ -98,7 +99,11 @@ def prepare(raw, params):
     [5,3,8]
     """
     # Diff, first of all.
-    raw['tickcloseprice'] = np.log(raw.tickcloseprice)
+    pandas.options.mode.chained_assignment = None
+    raw_columns = raw.columns.tolist()
+    for logable_column in params['stationarizable']:
+        if logable_column in raw_columns:
+            raw.loc[:, logable_column] = np.log(raw.loc[:, logable_column])
     non_stationary = np.array((diff(raw.values)))
 
     # Setup the windowing of the dataset.

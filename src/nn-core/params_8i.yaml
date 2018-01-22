@@ -1,7 +1,21 @@
 project_path: 'Documents/SideProjects/sailboatsfactory'
 data_path: 'data'
-networks_path: 'data/networks'
+networks_path: 'networks'
 training_file: 'ibex_1hr_2y.csv'
+
+# If specified, a model is loaded instead of being created. Same with weights
+load_model: ''
+load_weights: ''
+
+# if specified, the weights are saved into 'networks_path'. Same with weights.
+save_model: True
+save_weights: True
+save_predictor: False
+
+# Prediction Parameters
+pred_model: '2yr_128u_20e_9i_20180121_1032_pred.json'
+pred_weights: '2yr_128u_20e_9i_20180121_1032.h5'
+pred_dataset: 'ibex_1hr_2y.csv'
 
 lstm_stateful: True
 lstm_shuffle: False
@@ -16,12 +30,13 @@ lstm_timesteps: 6
 lstm_predictions: 1
 
 lstm_numlayers: 1
+lstm_layer1: 128
 lstm_dropout1: 0.075
-lstm_layer1: 2048
 
-num_testcases: 32
+num_testcases: 100
 validation_ratio: 0.05
 diff_intervals: 1
+num_saturations: 1
 save_network: True
 
 keras_verbose_level: 1
@@ -34,25 +49,15 @@ columNames:
   - tickvolume
   - awesome
   - macd
-  - rsi
-  - rsi2
-  - exponentialmovingaverage
-  - moneyflowindicator
-  - moneyflowindicator2
-  - bollingermid
-  - bollingerlow
-  - bollingerupper
-  - stochastick
-  - stochasticd
-  - stochasticrsi
   - positivevolumeindex
   - negativevolumeindex
-  - volumeweightedaverageprice
-  - dailytime
-  - weeklytime
-  - monthlytime
-  - coppockcurve
-  - avgdirmov
-  - dirmovminus
-  - dirmovplus
-  - chaikinmoneyflow
+
+stationarizable:
+  - tickcloseprice
+  - tickopenprice
+  - tickminprice
+  - tickmaxprice
+  - tickvolume
+  - exponentialmovingaverage
+  - positivevolumeindex
+  - negativevolumeindex
