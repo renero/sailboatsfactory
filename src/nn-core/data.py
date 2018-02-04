@@ -58,8 +58,8 @@ def inverse_diff(a_diff, a, interval=1):
     """
     if a_diff.ndim is not 2 or a.ndim is not 2:
         raise ValueError(
-            'Differentiating with wrong number of dimensions({:d})'.format(
-                a.ndim))
+            'Diffing with wrong nr. of dimensions({:d} != {:d})'.format(
+                a_diff.ndim, a.ndim))
     col0 = np.concatenate((a[0:interval, 0:1], (a_diff[:, 0:1] + a[:-1, 0:1])),
                           axis=0)
     return np.concatenate((col0, a[:, 1:]), axis=1)

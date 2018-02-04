@@ -3,7 +3,7 @@ from keras.models import model_from_json
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout, Activation
 from numpy.random import seed
-from numpy import zeros
+from numpy import zeros, expm1
 from tensorflow import set_random_seed
 from os.path import join
 from pathlib import Path
@@ -119,7 +119,13 @@ def predict(params_name):
     params = parameters.read(params_name)
     adjusted = parameters.adjust(data.read(params, params['pred_dataset']),
                                  params)
+    # prepare test data
     _, _, X_test, Y_test = data.prepare(adjusted, params)
+    # Recover the original values of Y to later plot the original price
+    num_preds = Y_test.shape[0]
+    raw_Ytest = adjusted.iloc[-num_preds-1:, 0].values.reshape(-num_preds-1, 1)
+    raw_Ytest = raw_Ytest
+    # Perform the prediction.
     model1 = model.prediction_setup(params)
     (yhat, num_errors) = range_predict(model1, X_test, Y_test, params)
-    return (params, model1, Y_test, yhat, num_errors)
+    return (params, model1, raw_Ytest, Y_test, yhat, num_errors)

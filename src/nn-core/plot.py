@@ -1,5 +1,9 @@
 import matplotlib.pyplot as plt
+from matplotlib import figure
 import numpy
+
+
+import data
 
 
 def history(history):
@@ -58,6 +62,20 @@ def prediction(Y, Yhat, num_errors, params, inv_scale=True, inv_log=True):
         plt.plot([x], [y], marker='o', markersize=5, color=color)
     plt.plot(Yhat, '--', marker='', color='r', linewidth=1)
     plt.plot(Y, marker='o', color='b', linewidth=1.0, alpha=0.5)
+    plt.show()
+
+
+def original(yraw, ytest, params):
+    """
+    Plots the original values against the predicted ones.
+    """
+    i_scale_Ytest = params['y_scaler'].inverse_transform(ytest.reshape(-1, 1))
+    nr = i_scale_Ytest.shape[0]
+    i_diff_Ytest = data.inverse_diff(i_scale_Ytest.reshape(nr, 1), yraw)
+    i_log_Ytest = numpy.expm1(i_diff_Ytest)
+    plt.figure(figsize=(10, 6))
+    plt.plot(numpy.expm1(yraw), color='b', alpha=0.6)
+    plt.plot(i_log_Ytest, '--', color='b', alpha=0.6)
     plt.show()
 
 
