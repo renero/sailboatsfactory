@@ -33,10 +33,17 @@ def setup_plot(title):
     plt.title(title)
 
 
-def prediction(Y, Yhat, num_errors):
+def prediction(Y, Yhat, num_errors, params, inv_scale=True, inv_log=True):
     title = 'T.E={:.02f}% ({:d}/{:d})'.format(
         (num_errors/(len(Yhat)-1)), num_errors, len(Yhat) - 1)
     setup_plot(title)
+    # Inverse the exponentiate to undo the log and the scaling of the data.
+    if inv_log is True:
+        Y = numpy.expm1(Y)
+        Yhat = numpy.expm1(Yhat)
+    if inv_scale is True:
+        Y = params['y_scaler'].inverse_transform(Y)
+        Yhat = params['y_scaler'].inverse_transform(Yhat)
     # place the prediction as we did with test_values
     for idx in range(len(Yhat)):
         x = idx

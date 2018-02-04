@@ -71,14 +71,21 @@ def prediction_setup(params):
     return load_weights(model, params, prediction=True)
 
 
-def save(model, params):
+def save(model, params, prefix='', additional_epocs=0):
     """
     Save the model, weights and/or the predictor version of the net.
     """
     home_path = str(Path.home())
-    project_path = 'Documents/SideProjects/sailboatsfactory'
-    save_folder = join(join(home_path, project_path), 'data/networks')
-    base_name = '{0:%Y}{0:%m}{0:%d}_{0:%H}{0:%M}'.format(datetime.now())
+    save_folder = join(join(home_path, params['project_path']),
+                       params['networks_path'])
+    name_prefix = '{}_{:d}L{:d}u_{:d}e_{:02d}i_'.format(
+        prefix,
+        params['lstm_numlayers'],
+        params['lstm_layer1'],
+        params['lstm_num_epochs'] + additional_epocs,
+        len(params['columNames']))
+    name_suffix = '{0:%Y}{0:%m}{0:%d}_{0:%H}{0:%M}'.format(datetime.now())
+    base_name = name_prefix + name_suffix
     # Save the model?
     if params['save_model']:
         model_name = join(save_folder, '{}.json'.format(base_name))

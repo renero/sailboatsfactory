@@ -103,7 +103,7 @@ def prepare(raw, params):
     raw_columns = raw.columns.tolist()
     for logable_column in params['stationarizable']:
         if logable_column in raw_columns:
-            raw.loc[:, logable_column] = np.log(raw.loc[:, logable_column])
+            raw.loc[:, logable_column] = np.log1p(raw.loc[:, logable_column])
     non_stationary = np.array((diff(raw.values)))
 
     # Setup the windowing of the dataset.

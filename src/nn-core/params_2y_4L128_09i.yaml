@@ -1,0 +1,67 @@
+project_path: 'Documents/SideProjects/sailboatsfactory'
+data_path: 'data'
+networks_path: 'networks'
+training_file: 'ibex_1hr_2y.csv'
+
+# If specified, a model is loaded instead of being created. Same with weights
+load_model: ''
+load_weights: ''
+
+# if specified, the weights are saved into 'networks_path'. Same with weights.
+save_model: True
+save_weights: True
+save_predictor: True          # Save trained model, but with batch_size=1 to make single predictions.
+
+pred_model: '2y_4L_80e_9i_20180121_pred.json'
+pred_weights: '2y_4L_80e_9i_20180121.h5'
+pred_dataset: 'ibex_1hr_2y.csv'
+
+lstm_stateful: True
+lstm_shuffle: False
+lstm_forget_bias: True
+lstm_unroll: False
+lstm_loss: 'mse'
+lstm_optimizer: 'adam'
+
+lstm_num_epochs: 80
+lstm_batch_size: 8
+lstm_timesteps: 6
+lstm_predictions: 1
+
+lstm_numlayers: 4
+lstm_layer1: 128
+lstm_dropout1: 0.075
+lstm_layer2: 128
+lstm_dropout2: 0.075
+lstm_layer3: 128
+lstm_dropout3: 0.075
+lstm_layer4: 128
+lstm_dropout4: 0.075
+
+num_testcases: 100
+num_saturations: 1
+validation_ratio: 0.05
+diff_intervals: 1
+
+keras_verbose_level: 1
+delimiter: '|'
+columNames:
+  - tickcloseprice
+  - tickopenprice
+  - tickminprice
+  - tickmaxprice
+  - tickvolume
+  - awesome
+  - macd
+  - positivevolumeindex
+  - negativevolumeindex
+
+stationarizable:
+  - tickcloseprice
+  - tickopenprice
+  - tickminprice
+  - tickmaxprice
+  - tickvolume
+  - exponentialmovingaverage
+  - positivevolumeindex
+  - negativevolumeindex
