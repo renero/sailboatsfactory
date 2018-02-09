@@ -68,6 +68,22 @@ def inverse_diff(a_diff, a, interval=1):
     return np.concatenate((col0, a[:, 1:]), axis=1)
 
 
+def normalize(raw):
+    normalized = pandas.DataFrame([], columns=raw.columns)
+    for column in raw.columns.tolist():
+        normalized.loc[:, column] = (
+            raw.loc[:, column] / raw.loc[0, column]) - 1.0
+    return normalized
+
+
+def denormalized(normalized, raw):
+    denormalized = pandas.DataFrame([], columns=normalized.columns)
+    for column in normalized.columns.tolist():
+        denormalized.loc[:, column] = raw.loc[0, column] * (
+            normalized[:, column] + 1.0)
+    return denormalized
+
+
 def split(X, Y, num_testcases):
     """
     Splits X, Y horizontally to separate training from test, as specified
