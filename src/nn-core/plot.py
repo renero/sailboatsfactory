@@ -35,19 +35,26 @@ def setup_plot(title):
     plt.minorticks_on()
     plt.ylabel('price')
     plt.title(title)
+    return ax
 
 
-def prediction(Y, Yhat, num_errors, params, inv_scale=True, inv_log=True):
+def prediction(Y, Yhat, Yraw, n_errs, params,
+               inv_scale=True, inv_diff=True, inv_log=True):
     title = 'T.E={:.02f}% ({:d}/{:d})'.format(
-        (num_errors/(len(Yhat)-1)), num_errors, len(Yhat) - 1)
-    setup_plot(title)
+        (n_errs/(len(Yhat)-1)), n_errs, len(Yhat) - 1)
+    ax = setup_plot(title)
     # Inverse the exponentiate to undo the log and the scaling of the data.
+    # To have the original data these steps must be done in this order
+    # unscale -> undiff -> unlog
+    if inv_scale is True:
+        Y = params['y_scaler'].inverse_transform(Y.reshape(-1, 1))
+        Yhat = params['y_scaler'].inverse_transform(Yhat.reshape(-1, 1))
+    if inv_diff is True:
+        Y = data.inverse_diff(Y.reshape(-1, 1), Yraw)
+        Yhat = data.inverse_diff(Yhat.reshape(-1, 1), Yraw)
     if inv_log is True:
         Y = numpy.expm1(Y)
         Yhat = numpy.expm1(Yhat)
-    if inv_scale is True:
-        Y = params['y_scaler'].inverse_transform(Y)
-        Yhat = params['y_scaler'].inverse_transform(Yhat)
     # place the prediction as we did with test_values
     for idx in range(len(Yhat)):
         x = idx
@@ -57,25 +64,28 @@ def prediction(Y, Yhat, num_errors, params, inv_scale=True, inv_log=True):
             y_trend = numpy.sign(Y[idx]-Y[idx-1])
             error = int(yhat_trend != y_trend)
             color = 'red' if error is 1 else 'green'
-        else:
-            color = 'green'
-        plt.plot([x], [y], marker='o', markersize=5, color=color)
-    plt.plot(Yhat, '--', marker='', color='r', linewidth=1)
-    plt.plot(Y, marker='o', color='b', linewidth=1.0, alpha=0.5)
+            plt.plot([x], [y], marker='_', markersize=8, color=color)
+    #    else:
+    #        color = 'green'
+    plt.plot(Yhat, '--', marker='', color='r', linewidth=0.3, alpha=0.6)
+    ax.plot(Y, color='b', lw=1, alpha=0.7)
+    ax.plot(Y, color='b', marker='.', alpha=0.3, markersize=8)
     plt.show()
 
 
-def original(yraw, ytest, params):
+def original(yraw, yhat, params):
     """
     Plots the original values against the predicted ones.
+    To restore original values, 1st unscale, then undiff, and finally
+    unlog (exp1m), which is the sequence of steps in reverse order.
     """
-    i_scale_Ytest = params['y_scaler'].inverse_transform(ytest.reshape(-1, 1))
-    nr = i_scale_Ytest.shape[0]
-    i_diff_Ytest = data.inverse_diff(i_scale_Ytest.reshape(nr, 1), yraw)
-    i_log_Ytest = numpy.expm1(i_diff_Ytest)
-    plt.figure(figsize=(10, 6))
-    plt.plot(numpy.expm1(yraw), color='b', alpha=0.6)
-    plt.plot(i_log_Ytest, '--', color='b', alpha=0.6)
+    ax = setup_plot('Original price and prediction levels')
+    yhat = params['y_scaler'].inverse_transform(yhat.reshape(-1, 1))
+    yhat = data.inverse_diff(yhat.reshape(-1, 1), yraw)
+    yhat = numpy.expm1(yhat)
+    ax.plot(numpy.expm1(yraw), color='b', lw=1, alpha=0.7)
+    ax.plot(numpy.expm1(yraw), color='b', marker='.', markersize=8, alpha=0.3)
+    plt.plot(yhat, '_', color='r', alpha=0.6)
     plt.show()
 
 

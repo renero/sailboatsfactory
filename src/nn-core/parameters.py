@@ -72,3 +72,14 @@ def adjust(raw, params):
     print('Reshaping raw from [{}] to [{}]'.
           format(raw.shape, raw[-new_shape:].shape))
     return raw[-new_shape:]
+
+
+def param_set(params, param):
+    """
+    Check if 'param' is set in the parameters, and if so, returns if is set
+    to True. Otherwise returns False.
+    """
+    if param in params:
+        if params[param] is True:
+            return True
+    return False

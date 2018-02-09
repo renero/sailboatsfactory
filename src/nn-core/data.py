@@ -6,6 +6,9 @@ from pathlib import Path
 from os.path import join
 
 
+from parameters import param_set
+
+
 def read(params, dataset_file=''):
     """
     If dataset_file is specified then whatever training_file is specified
@@ -98,13 +101,18 @@ def prepare(raw, params):
     [4,2,3]     [[2,6,3],[4,2,3],[5,_,_]]
     [5,3,8]
     """
-    # Diff, first of all.
-    pandas.options.mode.chained_assignment = None
-    raw_columns = raw.columns.tolist()
-    for logable_column in params['stationarizable']:
-        if logable_column in raw_columns:
-            raw.loc[:, logable_column] = np.log1p(raw.loc[:, logable_column])
-    non_stationary = np.array((diff(raw.values)))
+    # Log, first of all.
+    if param_set(params, 'prepare_stationarize') is True:
+        pandas.options.mode.chained_assignment = None
+        raw_columns = raw.columns.tolist()
+        for column in params['stationarizable']:
+            if column in raw_columns:
+                raw.loc[:, column] = np.log1p(raw.loc[:, column])
+    # Diff, as second transformation
+    if param_set(params, 'prepare_diff') is True:
+        non_stationary = np.array((diff(raw.values)))
+    else:
+        non_stationary = raw.values[1:]
 
     # Setup the windowing of the dataset.
     num_samples = non_stationary.shape[0]
