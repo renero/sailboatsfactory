@@ -32,42 +32,6 @@ def read(params, dataset_file=''):
     return (raw_dataset)
 
 
-def diff(a, interval=1):
-    """
-    Given a 2D array (a), compute the one resulting from differentiating each
-    element by the one at "interval" distance from it, only for the first
-    column:
-
-    [  1.   1.]
-    [  2.   2.]  =>  [ 1.   2.]
-    [  4.   3.]  =>  [ 2.   3.]
-    [  7.   4.]  =>  [ 3.   4.]
-    [ 11.   5.]  =>  [ 4.   5.]
-
-    """
-    if a.ndim is not 2:
-        raise ValueError(
-            'Differentiating tensor with wrong number of dimensions ({:d})'.
-            format(a.ndim))
-    return np.concatenate((
-                         (a[interval:, 0:1] - a[:-interval, 0:1]),
-                          a[interval:, 1:]),
-                          axis=1)
-
-
-def inverse_diff(a_diff, a, interval=1):
-    """
-    Inverts the operation at 'diff', needing the original vector.
-    """
-    if a_diff.ndim is not 2 or a.ndim is not 2:
-        raise ValueError(
-            'Diffing with wrong nr. of dimensions({:d} != {:d})'.format(
-                a_diff.ndim, a.ndim))
-    col0 = np.concatenate((a[0:interval, 0:1], (a_diff[:, 0:1] + a[:-1, 0:1])),
-                          axis=0)
-    return np.concatenate((col0, a[:, 1:]), axis=1)
-
-
 def normalize(df):
     """
     Normalize input according to the price change ratio
@@ -85,8 +49,8 @@ def normalize(df):
                                   columns=df.columns.tolist())
     for column in df.columns.tolist():
         p0 = df.loc[1, column]
-        normalized.loc[:, str(column)] = (df.loc[:, str(column)] / p0) - 1.0
-        normalized.loc[1, str(column)] = df.loc[1, str(column)]
+        normalized.loc[:, column] = (df.loc[:, column] / p0) - 1.0
+        normalized.loc[1, column] = df.loc[1, column]
     return normalized
 
 
@@ -98,17 +62,6 @@ def denormalize(normalized):
         denormalized.loc[1, column] = p0
         denormalized.loc[2:, column] = p0 * (normalized.loc[2:, column] + 1.0)
     return denormalized
-
-
-def destationarize(raw, stationarizable_columns):
-    destationarized = raw.copy()
-    pandas.options.mode.chained_assignment = None
-    raw_columns = destationarized.columns.tolist()
-    for column in stationarizable_columns:
-        if column in raw_columns:
-            destationarized.loc[:, column] = np.log1p(
-                destationarized.loc[:, column])
-    return destationarized
 
 
 def split(X, Y, num_testcases):
@@ -147,21 +100,12 @@ def prepare(raw, params):
 
     # Check flags to normalize or remove stationarity.
     raw_prepared = raw.copy()
-    if param_set(params, 'prepare_normalize'):
-        print('Normalizing all columns')
-        raw_prepared = normalize(raw)
-        params['prepare_scale'] = False
-        params['prepare_diff'] = False
-        params['prepare_stationarize'] = False
-    elif param_set(params, 'prepare_stationarize') is True:
-        print('Destationarizing selected columns')
-        raw_prepared = destationarize(raw, params['stationarizable'])
-    # Diff, as second transformation
-    if param_set(params, 'prepare_diff') is True:
-        print('Differentiating values')
-        raw_prepared = np.array((diff(raw.values)))
-    else:
-        raw_prepared = raw.values[1:, :]
+    print('Raw shape:', raw_prepared.shape)
+    print('Normalizing all columns')
+    raw_prepared = normalize(raw)
+    params['prepare_scale'] = False
+    params['prepare_diff'] = False
+    params['prepare_stationarize'] = False
 
     # Setup the windowing of the dataset.
     num_samples = raw_prepared.shape[0]
@@ -184,20 +128,11 @@ def prepare(raw, params):
     Y = empty((num_frames, num_predictions))
     print('X[{}], Y[{}]'.format(X.shape, Y.shape))
     for i in range(num_samples - num_timesteps):
-        X[i] = raw_prepared[i:i + num_timesteps, ]
-        Y[i] = raw_prepared[
-                i + num_timesteps:i + num_timesteps + num_predictions, 0
+        X[i] = raw_prepared.loc[i:i + num_timesteps - 1, :]
+        Y[i] = raw_prepared.loc[
+                i + num_timesteps, 'tickcloseprice'
                ]
-    # Scale
-    if params['prepare_scale'] is True:
-        print('Scaling first column on X and Y')
-        X_scaled = np.array([params['x_scaler'].fit_transform(X[i])
-                            for i in range(X.shape[0])])
-        Y_scaled = params['y_scaler'].fit_transform(Y)
-        # Split in training and test
-        return split(X_scaled, Y_scaled, params['num_testcases'])
-    else:
-        return split(X, Y, params['num_testcases'])
+    return split(X, Y, params['num_testcases'])
 
 
 def unprepare(vector, params):

@@ -124,7 +124,6 @@ def predict(params_name):
     # Recover the original values of Y to later plot the original price
     num_preds = Y_test.shape[0]
     raw_Ytest = adjusted.iloc[-num_preds-1:, 0].values.reshape(-num_preds-1, 1)
-    raw_Ytest = raw_Ytest
     # Perform the prediction.
     model1 = model.prediction_setup(params)
     (yhat, num_errors) = range_predict(model1, X_test, Y_test, params)

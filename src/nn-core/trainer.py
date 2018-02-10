@@ -28,7 +28,4 @@ adjusted = parameters.adjust(raw, params)
 X_train, Y_train, X_test, Y_test = data.prepare(adjusted, params)
 model = setup(params)
 train_loss = lstm.fit(model, X_train, Y_train, params)
-# save(model, params, prefix='3y', additional_epocs=0)
-X_train[1:3][1][1:10]
-
-(yhat, num_errors) = lstm.range_predict(model, X_test, Y_test, params)
+save(model, params, prefix='3y', additional_epocs=0)

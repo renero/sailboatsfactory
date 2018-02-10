@@ -1,7 +1,7 @@
 project_path: 'Documents/SideProjects/sailboatsfactory'
 data_path: 'data'
 networks_path: 'networks'
-training_file: 'ibex_1hr_3y.csv'
+training_file: 'ibex_1hr_5y.csv'
 
 # If specified, a model is loaded instead of being created. Same with weights
 load_model: ''
@@ -13,13 +13,13 @@ save_weights: True
 save_predictor: True
 
 # Prediction Parameters
-pred_model: '3y_1L256u_10e_09i_20180210_1002_pred.json'
-pred_weights: '3y_1L256u_10e_09i_20180210_1002.h5'
+pred_model: '3y_2L128u_80e_09i_20180210_1211_pred.json'
+pred_weights: '3y_2L128u_80e_09i_20180210_1211.h5'
 pred_dataset: 'ibex_1hr_3y.csv'
 num_saturations: 1
 
 # dataset preparation
-prepare_normalize: False
+prepare_normalize: True
 prepare_stationarize: False
 prepare_diff: False
 prepare_scale: False
@@ -34,15 +34,17 @@ lstm_shuffle: True
 lstm_forget_bias: True
 lstm_unroll: False
 lstm_loss: 'mse'
-lstm_optimizer: 'adam'
+lstm_optimizer: 'rmsprop'
 
-lstm_num_epochs: 1
-lstm_batch_size: 8
+lstm_num_epochs: 80
+lstm_batch_size: 50
 lstm_timesteps: 6
 lstm_predictions: 1
-lstm_numlayers: 1
-lstm_layer1: 256
-lstm_dropout1: 0.075
+lstm_numlayers: 2
+lstm_layer1: 128
+lstm_dropout1: 0.2
+lstm_layer2: 256
+lstm_dropout2: 0.2
 
 keras_verbose_level: 1
 delimiter: '|'

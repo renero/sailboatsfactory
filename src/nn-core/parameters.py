@@ -49,7 +49,7 @@ def find_largest_divisor(x, divisor, params, all=False):
             found = True
         else:
             x -= 1
-    return x
+    return x-1
 
 
 def adjust(raw, params):
@@ -71,7 +71,8 @@ def adjust(raw, params):
                                      all=False)
     print('Reshaping raw from [{}] to [{}]'.
           format(raw.shape, raw[-new_shape:].shape))
-    return raw[-new_shape:].reset_index()
+    new_df = raw[-new_shape:].reset_index()
+    return new_df.drop(['index'], axis=1)
 
 
 def param_set(params, param):
