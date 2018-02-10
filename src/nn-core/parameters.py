@@ -71,7 +71,7 @@ def adjust(raw, params):
                                      all=False)
     print('Reshaping raw from [{}] to [{}]'.
           format(raw.shape, raw[-new_shape:].shape))
-    return raw[-new_shape:]
+    return raw[-new_shape:].reset_index()
 
 
 def param_set(params, param):

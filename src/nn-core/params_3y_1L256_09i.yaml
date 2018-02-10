@@ -4,8 +4,8 @@ networks_path: 'networks'
 training_file: 'ibex_1hr_3y.csv'
 
 # If specified, a model is loaded instead of being created. Same with weights
-load_model: '3y_1L256u_20e_09i_20180205_0738.json'
-load_weights: '3y_1L256u_20e_09i_20180205_0738.h5'
+load_model: ''
+load_weights: ''
 
 # if specified, the weights are saved into 'networks_path'. Same with weights.
 save_model: True
@@ -13,15 +13,16 @@ save_weights: True
 save_predictor: True
 
 # Prediction Parameters
-pred_model: '3y_1L256u_60e_09i_20180205_0748_pred.json'
-pred_weights: '3y_1L256u_60e_09i_20180205_0748.h5'
+pred_model: '3y_1L256u_10e_09i_20180210_1002_pred.json'
+pred_weights: '3y_1L256u_10e_09i_20180210_1002.h5'
 pred_dataset: 'ibex_1hr_3y.csv'
 num_saturations: 1
 
-# Test dataset preparation
+# dataset preparation
+prepare_normalize: False
 prepare_stationarize: False
 prepare_diff: False
-prepare_scale: True
+prepare_scale: False
 
 num_testcases: 100
 validation_ratio: 0.05
@@ -29,12 +30,13 @@ diff_intervals: 1
 
 # LSTM configuration
 lstm_stateful: True
-lstm_shuffle: False
+lstm_shuffle: True
 lstm_forget_bias: True
 lstm_unroll: False
 lstm_loss: 'mse'
 lstm_optimizer: 'adam'
-lstm_num_epochs: 40
+
+lstm_num_epochs: 1
 lstm_batch_size: 8
 lstm_timesteps: 6
 lstm_predictions: 1

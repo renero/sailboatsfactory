@@ -18,10 +18,11 @@ import plot
 set_random_seed(2)
 seed(2)
 
-(params4, _, yraw, y4, yhat4, num_errors4) =\
+(params, _, yraw, y, yhat, num_errors) =\
     lstm.predict('params_3y_1L256_09i.yaml')
-plot.prediction(y4, yhat4, yraw, num_errors4, params4,
+plot.prediction(y, yhat, yraw, num_errors, params,
                 inv_scale=False, inv_diff=False, inv_log=False)
+
 # Check individual predictions
 #
 # Estoy intentando producir como salida de cada predicción un valor para el
@@ -33,17 +34,17 @@ plot.prediction(y4, yhat4, yraw, num_errors4, params4,
 # arriba en el grafico, o con los valores invertidos, que sería lo mismo.
 #
 # ...do it, please.
-for idx in range(len(yhat4)):
+for idx in range(len(yhat)):
     x = idx
-    y = yhat4[idx]
+    y = yhat[idx]
     if idx > 0:
-        yhat_trend = sign(yhat4[idx]-y4[idx-1])
-        y_trend = sign(y4[idx]-y4[idx-1])
+        yhat_trend = sign(yhat[idx]-y[idx-1])
+        y_trend = sign(y[idx]-y[idx-1])
 
-        y_original = params4['y_scaler'].inverse_transform(
-            y4[idx].reshape(-1, 1))
+        y_original = params['y_scaler'].inverse_transform(
+            y[idx].reshape(-1, 1))
         y_original = data.inverse_diff(
-            y_original, numpy.array([y4[idx-1], y4[idx]]))
+            y_original, numpy.array([y[idx-1], y[idx]]))
         y_original = numpy.expm1(y_original)
 
         if numpy.array_equal(yhat_trend, y_trend) is False:
@@ -51,15 +52,18 @@ for idx in range(len(yhat4)):
         else:
             err_msg = "OK!"
         print('{:.4f} -> {:.4f} / {:.4f} => [{:+} / {:+}] {} ··> {:.4f}'
-              .format(float(y4[idx-1]), float(y4[idx]), float(yhat4[idx]),
+              .format(float(y[idx-1]), float(y[idx]), float(yhat[idx]),
                       int(y_trend), int(yhat_trend), err_msg,
                       float(y_original[-1])))
     else:
-        print('{:.4f}'.format(float(y4[idx])))
+        print('{:.4f}'.format(float(y[idx])))
 
-y_avg = ((yhat1 + yhat2 + yhat3) / 3.0)
-rmse, num_errors_avg = compute.error(y1, y_avg)
-plot.prediction(y1, y_avg, num_errors_avg, params1)
+#
+# --  Averaging predictions.
+#
+# y_avg = ((yhat1 + yhat2 + yhat3) / 3.0)
+# rmse, num_errors_avg = compute.error(y1, y_avg)
+# plot.prediction(y1, y_avg, num_errors_avg, params1)
 
 
 #

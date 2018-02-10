@@ -68,20 +68,47 @@ def inverse_diff(a_diff, a, interval=1):
     return np.concatenate((col0, a[:, 1:]), axis=1)
 
 
-def normalize(raw):
-    normalized = pandas.DataFrame([], columns=raw.columns)
-    for column in raw.columns.tolist():
-        normalized.loc[:, column] = (
-            raw.loc[:, column] / raw.loc[0, column]) - 1.0
+def normalize(df):
+    """
+    Normalize input according to the price change ratio
+
+    n_i = ( p_i / p_0 ) - 1
+
+    where n_i is the new normalized value, p_i is the i'th value of the df
+    data, and p_0 is the first value.
+
+    :param df: A pandas dataframe with multiple columns. All of them will
+    be normalized.
+    :returns: A new dataframe with all columns normalized.
+    """
+    normalized = pandas.DataFrame(pandas.np.empty(df.shape),
+                                  columns=df.columns.tolist())
+    for column in df.columns.tolist():
+        p0 = df.loc[1, column]
+        normalized.loc[:, str(column)] = (df.loc[:, str(column)] / p0) - 1.0
+        normalized.loc[1, str(column)] = df.loc[1, str(column)]
     return normalized
 
 
-def denormalized(normalized, raw):
-    denormalized = pandas.DataFrame([], columns=normalized.columns)
+def denormalize(normalized):
+    denormalized = pandas.DataFrame(pandas.np.empty(normalized.shape),
+                                    columns=normalized.columns)
     for column in normalized.columns.tolist():
-        denormalized.loc[:, column] = raw.loc[0, column] * (
-            normalized[:, column] + 1.0)
+        p0 = normalized.loc[1, column]
+        denormalized.loc[1, column] = p0
+        denormalized.loc[2:, column] = p0 * (normalized.loc[2:, column] + 1.0)
     return denormalized
+
+
+def destationarize(raw, stationarizable_columns):
+    destationarized = raw.copy()
+    pandas.options.mode.chained_assignment = None
+    raw_columns = destationarized.columns.tolist()
+    for column in stationarizable_columns:
+        if column in raw_columns:
+            destationarized.loc[:, column] = np.log1p(
+                destationarized.loc[:, column])
+    return destationarized
 
 
 def split(X, Y, num_testcases):
@@ -117,22 +144,28 @@ def prepare(raw, params):
     [4,2,3]     [[2,6,3],[4,2,3],[5,_,_]]
     [5,3,8]
     """
-    # Log, first of all.
-    if param_set(params, 'prepare_stationarize') is True:
-        pandas.options.mode.chained_assignment = None
-        raw_columns = raw.columns.tolist()
-        for column in params['stationarizable']:
-            if column in raw_columns:
-                raw.loc[:, column] = np.log1p(raw.loc[:, column])
+
+    # Check flags to normalize or remove stationarity.
+    raw_prepared = raw.copy()
+    if param_set(params, 'prepare_normalize'):
+        print('Normalizing all columns')
+        raw_prepared = normalize(raw)
+        params['prepare_scale'] = False
+        params['prepare_diff'] = False
+        params['prepare_stationarize'] = False
+    elif param_set(params, 'prepare_stationarize') is True:
+        print('Destationarizing selected columns')
+        raw_prepared = destationarize(raw, params['stationarizable'])
     # Diff, as second transformation
     if param_set(params, 'prepare_diff') is True:
-        non_stationary = np.array((diff(raw.values)))
+        print('Differentiating values')
+        raw_prepared = np.array((diff(raw.values)))
     else:
-        non_stationary = raw.values[1:]
+        raw_prepared = raw.values[1:, :]
 
     # Setup the windowing of the dataset.
-    num_samples = non_stationary.shape[0]
-    num_features = non_stationary.shape[1]
+    num_samples = raw_prepared.shape[0]
+    num_features = raw_prepared.shape[1]
     num_predictions = params['lstm_predictions']
     num_timesteps = params['lstm_timesteps']
     num_frames = num_samples - (num_timesteps + num_predictions) + 1
@@ -140,32 +173,35 @@ def prepare(raw, params):
     params['num_samples'] = num_samples
     params['num_features'] = num_features
     params['num_frames'] = num_frames
+    print('Num samples.....:', num_samples)
+    print('Num features....:', num_features)
+    print('Num frames.....:', num_frames)
+    print('Num timesteps.....:', num_timesteps)
+    print('Num predictions.....:', num_predictions)
 
     # Build the 3D array (num_frames, num_timesteps, num_features)
     X = empty((num_frames, num_timesteps, num_features))
     Y = empty((num_frames, num_predictions))
     print('X[{}], Y[{}]'.format(X.shape, Y.shape))
     for i in range(num_samples - num_timesteps):
-        X[i] = non_stationary[i:i + num_timesteps, ]
-        Y[i] = non_stationary[
+        X[i] = raw_prepared[i:i + num_timesteps, ]
+        Y[i] = raw_prepared[
                 i + num_timesteps:i + num_timesteps + num_predictions, 0
                ]
     # Scale
-    X_scaled = np.array([params['x_scaler'].fit_transform(X[i])
-                        for i in range(X.shape[0])])
-    Y_scaled = params['y_scaler'].fit_transform(Y)
-    # Split in training and test
-    return split(X_scaled, Y_scaled, params['num_testcases'])
+    if params['prepare_scale'] is True:
+        print('Scaling first column on X and Y')
+        X_scaled = np.array([params['x_scaler'].fit_transform(X[i])
+                            for i in range(X.shape[0])])
+        Y_scaled = params['y_scaler'].fit_transform(Y)
+        # Split in training and test
+        return split(X_scaled, Y_scaled, params['num_testcases'])
+    else:
+        return split(X, Y, params['num_testcases'])
 
 
-def recover_Ytest(Y_test, raw, params):
-    """
-    From the test values of Y, returns the original values, after
-    inverting the scaling, and the diff operations. We need the
-    original raw values for that.
-    """
-    y_unscaled = params['y_scaler'].inverse_transform(Y_test)
-    y_undiff = inverse_diff(
-                y_unscaled,
-                raw[-(params['num_testcases']+1):, 0:1])
-    return y_undiff[-params['num_testcases']:]
+def unprepare(vector, params):
+    if param_set(params, 'prepare_normalize'):
+        return denormalize(vector.reshape(-1, 1))
+    else:
+        return(None)
