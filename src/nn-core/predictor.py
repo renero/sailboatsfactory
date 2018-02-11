@@ -3,6 +3,10 @@ from numpy.random import seed
 from numpy import log, exp, sign
 from tensorflow import set_random_seed
 import matplotlib.pyplot as plt
+from os.path import join, getctime
+from os import listdir
+from pathlib import Path
+import os
 
 import compute
 import data
@@ -20,7 +24,8 @@ seed(2)
 
 (params, _, yraw, y, yhat, num_errors) =\
     lstm.predict('params_3y_1L256_09i.yaml')
-plot.prediction(y, yhat, yraw, num_errors, params,
+plot.prediction(y, yhat,
+                yraw, num_errors, params,
                 inv_scale=False, inv_diff=False, inv_log=False)
 
 #
@@ -36,10 +41,6 @@ plot.prediction(y, yhat, yraw, num_errors, params,
 #
 # prediction = lstm.single_predict(model1, X_test[31], Y_test[31], params)
 # print(prediction)
-
-
-
-
 
 
 

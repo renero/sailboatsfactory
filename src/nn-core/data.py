@@ -1,10 +1,8 @@
 import pandas
 from pandas import read_csv
 from numpy import empty
-import numpy as np
 from pathlib import Path
 from os.path import join
-
 
 from parameters import param_set
 
@@ -29,6 +27,7 @@ def read(params, dataset_file=''):
         delimiter=params['delimiter'],
         usecols=params['columNames'])
     params['raw_numrows'] = raw_dataset.shape[0]
+    params['raw_numcols'] = raw_dataset.shape[1]
     return (raw_dataset)
 
 
@@ -48,19 +47,42 @@ def normalize(df):
     normalized = pandas.DataFrame(pandas.np.empty(df.shape),
                                   columns=df.columns.tolist())
     for column in df.columns.tolist():
-        p0 = df.loc[1, column]
+        p0 = df.loc[0, column]
+        print('p0 for col({}) = {}'.format(column, p0))
         normalized.loc[:, column] = (df.loc[:, column] / p0) - 1.0
-        normalized.loc[1, column] = df.loc[1, column]
-    return normalized
+    return normalized.loc[1:, :].reset_index().drop(['index'], axis=1)
 
 
-def denormalize(normalized):
-    denormalized = pandas.DataFrame(pandas.np.empty(normalized.shape),
-                                    columns=normalized.columns)
+def denormalize(normalized, params):
+    denormalized = pandas.DataFrame(
+        pandas.np.empty((params['adj_numrows'], params['adj_numcols'])),
+        columns=normalized.columns)
     for column in normalized.columns.tolist():
-        p0 = normalized.loc[1, column]
-        denormalized.loc[1, column] = p0
-        denormalized.loc[2:, column] = p0 * (normalized.loc[2:, column] + 1.0)
+        p0 = params['p0'][column]
+        denormalized.loc[0, column] = p0
+        denormalized.loc[1:, column] = p0 * (
+            normalized.loc[1:, column] + 1.0)
+    return denormalized
+
+
+def denormalize_vector(vector, column_name, params):
+    """
+    Denormalize a vector of values, previosly normalized by the 'normalize'
+    method. Denormaliztion needs to know what is the first value in the series
+    that was used as reference, that is stored in params['p0']
+
+    p_i = p_0 * (n_i + 1.0)
+
+    :param vector: The series of numbers that needs to be denormalized.
+    :param column_name: The name of the vector, and is used to access p0 value
+    :param params: The cache with all execution parameters
+    :returns: the vector, denormalized.
+    """
+    denormalized = pandas.DataFrame(
+        pandas.np.empty((vector.shape[0], 1)),
+        columns=[column_name])
+    p0 = params['p0'][column_name]
+    denormalized.loc[:, column_name] = p0 * (vector + 1.0)
     return denormalized
 
 
@@ -98,14 +120,14 @@ def prepare(raw, params):
     [5,3,8]
     """
 
-    # Check flags to normalize or remove stationarity.
+    # Save the first row to later re-construct normalized values.
+    p0 = raw.loc[0, :]
+    params['p0'] = p0
+    # raw_prepared will be the data normalized used to split X and Y.
     raw_prepared = raw.copy()
     print('Raw shape:', raw_prepared.shape)
-    print('Normalizing all columns')
     raw_prepared = normalize(raw)
-    params['prepare_scale'] = False
-    params['prepare_diff'] = False
-    params['prepare_stationarize'] = False
+    print('Normalized shape:', raw_prepared.shape)
 
     # Setup the windowing of the dataset.
     num_samples = raw_prepared.shape[0]
@@ -117,11 +139,12 @@ def prepare(raw, params):
     params['num_samples'] = num_samples
     params['num_features'] = num_features
     params['num_frames'] = num_frames
-    print('Num samples.....:', num_samples)
-    print('Num features....:', num_features)
-    print('Num frames.....:', num_frames)
-    print('Num timesteps.....:', num_timesteps)
-    print('Num predictions.....:', num_predictions)
+    # print('Num samples.....:', num_samples)
+    # print('Num features....:', num_features)
+    # print('Num frames......:', num_frames)
+    # print('Num timesteps...:', num_timesteps)
+    # print('Num predictions.:', num_predictions)
+    # print('Batch size......:', params['lstm_batch_size'])
 
     # Build the 3D array (num_frames, num_timesteps, num_features)
     X = empty((num_frames, num_timesteps, num_features))
@@ -133,10 +156,3 @@ def prepare(raw, params):
                 i + num_timesteps, 'tickcloseprice'
                ]
     return split(X, Y, params['num_testcases'])
-
-
-def unprepare(vector, params):
-    if param_set(params, 'prepare_normalize'):
-        return denormalize(vector.reshape(-1, 1))
-    else:
-        return(None)
