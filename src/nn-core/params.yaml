@@ -33,26 +33,26 @@ lstm_unroll: False
 lstm_loss: 'mse'
 lstm_optimizer: 'rmsprop'
 
-lstm_num_epochs: 10
+lstm_num_epochs: 50
 lstm_batch_size: 10
 lstm_timesteps: 6
 lstm_predictions: 1
 
 lstm_numlayers: 2
-lstm_layer1: 32
-lstm_dropout1: 0.1
-lstm_layer2: 64
-lstm_dropout2: 0.1
+lstm_layer1: 512
+lstm_dropout1: 0.075
+lstm_layer2: 1024
+lstm_dropout2: 0.075
 
 keras_verbose_level: 1
 delimiter: '|'
 columNames:
   - tickcloseprice
-#  - tickopenprice
-#  - tickminprice
-#  - tickmaxprice
-#  - tickvolume
-#  - awesome
-#  - macd
-#  - positivevolumeindex
-#  - negativevolumeindex
+  - tickopenprice
+  - tickminprice
+  - tickmaxprice
+  - tickvolume
+  - awesome
+  - macd
+  - positivevolumeindex
+  - negativevolumeindex

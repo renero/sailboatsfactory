@@ -1,6 +1,6 @@
 import pandas
 from pandas import read_csv
-from numpy import empty
+from numpy import empty, inf
 from pathlib import Path
 from os.path import join
 
@@ -50,7 +50,8 @@ def normalize(df):
         p0 = df.loc[0, column]
         print('p0 for col({}) = {}'.format(column, p0))
         normalized.loc[:, column] = (df.loc[:, column] / p0) - 1.0
-    return normalized.loc[1:, :].reset_index().drop(['index'], axis=1)
+    normd_clean = normalized.loc[1:, :].reset_index().drop(['index'], axis=1)
+    return normd_clean.fillna(0.0).replace([inf, -inf], 0)
 
 
 def denormalize(normalized, params):
