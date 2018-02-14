@@ -55,8 +55,10 @@ def build(params, save_predictor=True):
 
     # Output layer.
     # model.add(Dense(input_dim=64, output_dim=1))  # <- this is under test.
-    model.add(Dense(units=1, input_dim=64))  # <- this is under test.
-    # model.add(Dense(params['lstm_predictions']))
+    # model.add(Dense(units=128, input_dim=256))  # <- this is under test.
+    model.add(Dense(units=1, input_dim=params['lstm_layer{:d}'.format(
+        params['lstm_numlayers'])]))
+    # model.add(Dense(units=params['lstm_predictions']))
     model.add(Activation('linear'))
     model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
 
@@ -110,22 +112,20 @@ def range_predict(model, X_test, Y_test, params):
     return (preds, num_errors)
 
 
-def predict(params_name):
+def predict(params):
     """
-    From a parameters file and a network name (model and weights), builds a
+    From a set of parameters, loads a network (model and weights), builds a
     prediction vector, which is returned together with the number of tendency
     errors found
     """
-    params = parameters.read(params_name)
     adjusted = parameters.adjust(data.read(params, params['pred_dataset']),
                                  params)
     # prepare test data
     _, _, X_test, Y_test = data.prepare(adjusted, params)
     # Recover the original values of Y to later plot the original price
     num_preds = Y_test.shape[0]
-    raw_Ytest = adjusted.iloc[-num_preds-1:, 0].values.reshape(-num_preds-1, 1)
-    raw_Ytest = raw_Ytest
     # Perform the prediction.
     model1 = model.prediction_setup(params)
+    print('Feeding X_test (shape=', X_test.shape, ')')
     (yhat, num_errors) = range_predict(model1, X_test, Y_test, params)
-    return (params, model1, raw_Ytest, Y_test, yhat, num_errors)
+    return (params, model1, Y_test, yhat, num_errors)

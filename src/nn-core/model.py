@@ -2,7 +2,7 @@ from datetime import datetime
 from keras.models import model_from_json
 from os.path import join
 from pathlib import Path
-
+import os
 
 import lstm
 
@@ -111,3 +111,14 @@ def save(model, params, prefix='', additional_epocs=0):
         params['lstm_batch_size'] = bs
         del pred_model
         print('1-Prediction model saved to {}'.format(model_name))
+
+
+def latest_network(params):
+    """
+    Returns the latest network saved in the networks path.
+    """
+    path = join(join(str(Path.home()), params['project_path']),
+                params['networks_path'])
+    files = os.listdir(path)
+    paths = [os.path.join(path, basename) for basename in files]
+    return os.path.basename(max(paths, key=os.path.getctime))

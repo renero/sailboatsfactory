@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from matplotlib import figure
 import numpy
 
 
@@ -22,6 +21,7 @@ def curves(y, yhat, labels):
 
 
 def setup_plot(title):
+    #plt.style.use('fivethirtyeight')
     plt.figure(num=None, figsize=(10, 6), dpi=80, facecolor='w', edgecolor='k')
     major_ticks = numpy.arange(0, 1001, 10)
     minor_ticks = numpy.arange(0, 1001, 2)
@@ -38,23 +38,10 @@ def setup_plot(title):
     return ax
 
 
-def prediction(Y, Yhat, Yraw, n_errs, params,
-               inv_scale=True, inv_diff=True, inv_log=True):
+def prediction(Y, Yhat, n_errs, params):
     title = 'T.E={:.02f}% ({:d}/{:d})'.format(
         (n_errs/(len(Yhat)-1)), n_errs, len(Yhat) - 1)
     ax = setup_plot(title)
-    # Inverse the exponentiate to undo the log and the scaling of the data.
-    # To have the original data these steps must be done in this order
-    # unscale -> undiff -> unlog
-    if inv_scale is True:
-        Y = params['y_scaler'].inverse_transform(Y.reshape(-1, 1))
-        Yhat = params['y_scaler'].inverse_transform(Yhat.reshape(-1, 1))
-    if inv_diff is True:
-        Y = data.inverse_diff(Y.reshape(-1, 1), Yraw)
-        Yhat = data.inverse_diff(Yhat.reshape(-1, 1), Yraw)
-    if inv_log is True:
-        Y = numpy.expm1(Y)
-        Yhat = numpy.expm1(Yhat)
     # place the prediction as we did with test_values
     for idx in range(len(Yhat)):
         x = idx
@@ -64,12 +51,12 @@ def prediction(Y, Yhat, Yraw, n_errs, params,
             y_trend = numpy.sign(Y[idx]-Y[idx-1])
             error = int(yhat_trend != y_trend)
             color = 'red' if error is 1 else 'green'
-            plt.plot([x], [y], marker='_', markersize=8, color=color)
+            plt.plot([x], [y], marker='+', markersize=8, color=color)
     #    else:
     #        color = 'green'
-    plt.plot(Yhat, '--', marker='', color='r', linewidth=0.3, alpha=0.6)
+    plt.plot(Yhat, '--', marker='', color='r', linewidth=0.4, alpha=0.8)
     ax.plot(Y, color='b', lw=1, alpha=0.7)
-    ax.plot(Y, color='b', marker='.', alpha=0.3, markersize=8)
+    ax.plot(Y, color='b', marker='.', alpha=0.4, markersize=8)
     plt.show()
 
 

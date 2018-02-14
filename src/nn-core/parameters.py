@@ -35,7 +35,7 @@ def valid_samples(x, params, all=False):
             - params['lstm_predictions'])
 
 
-def find_largest_divisor(x, divisor, params, all=False):
+def find_largest_divisor(x, params, all=False):
     """
     Compute a number lower or equal to 'x' that is divisible by the divsor
     passed as second argument. The flag 'all' informs the function whether
@@ -60,18 +60,19 @@ def adjust(raw, params):
     Returns the raw sequence of samples adjusted, by removing the first
     elements from the array until shape fulfills TensorFlow conditions.
     """
-    new_testshape = find_largest_divisor(params['num_testcases'],
-                                         params['lstm_batch_size'],
-                                         params,
-                                         all=True)
+    new_testshape = find_largest_divisor(
+        params['num_testcases'], params, all=True)
+    print('Reshaping TEST from [{}] to [{}]'.
+          format(params['num_testcases'], new_testshape))
     params['num_testcases'] = new_testshape
-    new_shape = find_largest_divisor(raw.shape[0],
-                                     params['lstm_batch_size'],
-                                     params,
-                                     all=False)
-    print('Reshaping raw from [{}] to [{}]'.
+    new_shape = find_largest_divisor(
+        raw.shape[0], params, all=False)
+    print('Reshaping RAW from [{}] to [{}]'.
           format(raw.shape, raw[-new_shape:].shape))
-    return raw[-new_shape:]
+    new_df = raw[-new_shape:].reset_index().drop(['index'], axis=1)
+    params['adj_numrows'] = new_df.shape[0]
+    params['adj_numcols'] = new_df.shape[1]
+    return new_df
 
 
 def param_set(params, param):

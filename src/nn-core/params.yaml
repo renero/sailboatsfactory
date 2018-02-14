@@ -1,34 +1,48 @@
 project_path: 'Documents/SideProjects/sailboatsfactory'
 data_path: 'data'
-networks_path: 'data/networks'
-training_file: 'ibex_hourly_1y_rounded.csv'
+networks_path: 'networks'
+training_file: 'ibex_1hr_5y.csv'
 
-scaler: MinMaxScaler(feature_range=(0, 1))
+# If specified, a model is loaded instead of being created. Same with weights
+load_model: ''
+load_weights: ''
 
+# if specified, the weights are saved into 'networks_path'. Same with weights.
+save_model: True
+save_weights: True
+save_predictor: True
+
+# Prediction Parameters
+pred_model: 'model_name_pred.json'
+pred_weights: 'weights.h5'
+pred_dataset: 'ibex_1hr_5y.csv'
+num_saturations: 1
+
+# dataset preparation
+prepare_normalize: True
+
+num_testcases: 100
+validation_ratio: 0.05
+diff_intervals: 1
+
+# LSTM configuration
 lstm_stateful: True
-lstm_shuffle: False
-lstm_forget_bias: True
+lstm_shuffle: True
+lstm_forget_bias: False
 lstm_unroll: False
 lstm_loss: 'mse'
 lstm_optimizer: 'rmsprop'
 
-lstm_num_epochs: 5
-lstm_batch_size: 8
+lstm_num_epochs: 50
+lstm_batch_size: 10
 lstm_timesteps: 6
 lstm_predictions: 1
 
-lstm_numlayers: 1
+lstm_numlayers: 2
+lstm_layer1: 512
 lstm_dropout1: 0.075
+lstm_layer2: 1024
 lstm_dropout2: 0.075
-lstm_dropout3: 0.2
-lstm_layer1: 1536
-lstm_layer2: 512
-lstm_layer3: 256
-
-num_testcases: 32
-validation_ratio: 0.05
-diff_intervals: 1
-save_network: True
 
 keras_verbose_level: 1
 delimiter: '|'
@@ -39,21 +53,6 @@ columNames:
   - tickmaxprice
   - tickvolume
   - awesome
-#  - macd
-#  - rsi
-#  - rsi2
-#  - exponentialmovingaverage
-#  - moneyflowindicator
-#  - moneyflowindicator2
-#  - bollingermid
-#  - bollingerlow
-#  - bollingerupper
-#  - stochastick
-#  - stochasticd
-#  - stochasticrsi
+  - macd
   - positivevolumeindex
   - negativevolumeindex
-#  - volumeweightedaverageprice
-#  - dailytime
-#  - weeklytime
-#  - monthlytime
