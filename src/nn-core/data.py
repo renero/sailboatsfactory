@@ -31,7 +31,7 @@ def read(params, dataset_file=''):
     return (raw_dataset)
 
 
-def normalize(df):
+def normalize(df, params):
     """
     Normalize input according to the price change ratio
 
@@ -44,26 +44,19 @@ def normalize(df):
     be normalized.
     :returns: A new dataframe with all columns normalized.
     """
+    # Save the first row to later re-construct normalized values.
+    p0 = df.loc[0, :]
+    params['p0'] = p0
+    # raw_prepared will be the data normalized used to split X and Y.
+    print('Raw shape:', df.shape)
     normalized = pandas.DataFrame(pandas.np.empty(df.shape),
                                   columns=df.columns.tolist())
     for column in df.columns.tolist():
         p0 = df.loc[0, column]
-        print('p0 for col({}) = {}'.format(column, p0))
         normalized.loc[:, column] = (df.loc[:, column] / p0) - 1.0
     normd_clean = normalized.loc[1:, :].reset_index().drop(['index'], axis=1)
+    print('Normalized shape:', normd_clean.shape)
     return normd_clean.fillna(0.0).replace([inf, -inf], 0)
-
-
-def denormalize(normalized, params):
-    denormalized = pandas.DataFrame(
-        pandas.np.empty((params['adj_numrows'], params['adj_numcols'])),
-        columns=normalized.columns)
-    for column in normalized.columns.tolist():
-        p0 = params['p0'][column]
-        denormalized.loc[0, column] = p0
-        denormalized.loc[1:, column] = p0 * (
-            normalized.loc[1:, column] + 1.0)
-    return denormalized
 
 
 def denormalize_vector(vector, column_name, params):
@@ -102,7 +95,7 @@ def split(X, Y, num_testcases):
     return X_train, Y_train, X_test, Y_test
 
 
-def prepare(raw, params):
+def prepare(raw_prepared, params):
     """
     Takes the data series as a sequence of rows, with "num_features" features
     on each line, and transform it into a 3D array, where the first dimension
@@ -120,40 +113,20 @@ def prepare(raw, params):
     [4,2,3]     [[2,6,3],[4,2,3],[5,_,_]]
     [5,3,8]
     """
-
-    # Save the first row to later re-construct normalized values.
-    p0 = raw.loc[0, :]
-    params['p0'] = p0
-    # raw_prepared will be the data normalized used to split X and Y.
-    raw_prepared = raw.copy()
-    print('Raw shape:', raw_prepared.shape)
-    raw_prepared = normalize(raw)
-    print('Normalized shape:', raw_prepared.shape)
-
     # Setup the windowing of the dataset.
-    num_samples = raw_prepared.shape[0]
-    num_features = raw_prepared.shape[1]
-    num_predictions = params['lstm_predictions']
-    num_timesteps = params['lstm_timesteps']
-    num_frames = num_samples - (num_timesteps + num_predictions) + 1
-    # Update internal cache of parameters
-    params['num_samples'] = num_samples
-    params['num_features'] = num_features
-    params['num_frames'] = num_frames
-    # print('Num samples.....:', num_samples)
-    # print('Num features....:', num_features)
-    # print('Num frames......:', num_frames)
-    # print('Num timesteps...:', num_timesteps)
-    # print('Num predictions.:', num_predictions)
-    # print('Batch size......:', params['lstm_batch_size'])
+    params['num_samples'] = raw_prepared.shape[0]
+    params['num_features'] = raw_prepared.shape[1]
+    params['num_frames'] = params['num_samples'] - (
+        params['lstm_timesteps'] + params['lstm_predictions']) + 1
 
     # Build the 3D array (num_frames, num_timesteps, num_features)
-    X = empty((num_frames, num_timesteps, num_features))
-    Y = empty((num_frames, num_predictions))
+    X = empty((params['num_frames'], params['lstm_timesteps'],
+               params['num_features']))
+    Y = empty((params['num_frames'], params['lstm_predictions']))
     print('X[{}], Y[{}]'.format(X.shape, Y.shape))
-    for i in range(num_samples - num_timesteps):
-        X[i] = raw_prepared.loc[i:i + num_timesteps - 1, :]
+    for i in range(params['num_samples'] - params['lstm_timesteps']):
+        X[i] = raw_prepared.loc[i:i + params['lstm_timesteps'] - 1, :]
         Y[i] = raw_prepared.loc[
-                i + num_timesteps, 'tickcloseprice'
+                i + params['lstm_timesteps'], 'tickcloseprice'
                ]
     return split(X, Y, params['num_testcases'])
