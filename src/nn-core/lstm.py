@@ -1,13 +1,8 @@
-from datetime import datetime
-from keras.models import model_from_json
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout, Activation
 from numpy.random import seed
-from numpy import zeros, expm1
+from numpy import zeros
 from tensorflow import set_random_seed
-from os.path import join
-from pathlib import Path
-
 
 import compute
 import data
@@ -20,11 +15,19 @@ set_random_seed(2)
 seed(2)
 
 
-def build(params, save_predictor=True):
+def build(params, batch_size=None):
     """
     Build the LSTM according to the parameters passed. The general
     architecture is set in the code.
+    :param batch_size: If this param is not None is used to override the value
+                       set in the parameters dictionary. This is usefule when
+                       willing to build a network to make 1-step predictions.
     """
+    # Use ALWAYS the batch_size value from the parameter of the method. If not
+    # set, then copy it from the params.
+    if batch_size is None:
+        batch_size = params['lstm_batch_size']
+    # Buuild the lstm.
     model = Sequential()
     # Check if my design has more than 1 layer.
     ret_seq_flag = False
@@ -38,7 +41,7 @@ def build(params, save_predictor=True):
             stateful=params['lstm_stateful'],
             unit_forget_bias=params['lstm_forget_bias'],
             unroll=params['lstm_unroll'],
-            batch_input_shape=(params['lstm_batch_size'],
+            batch_input_shape=(batch_size,
                                params['lstm_timesteps'],
                                params['num_features']),
             return_sequences=ret_seq_flag))
@@ -54,11 +57,8 @@ def build(params, save_predictor=True):
         model.add(Dropout(params['lstm_dropout{:d}'.format(layer+1)]))
 
     # Output layer.
-    # model.add(Dense(input_dim=64, output_dim=1))  # <- this is under test.
-    # model.add(Dense(units=128, input_dim=256))  # <- this is under test.
     model.add(Dense(units=1, input_dim=params['lstm_layer{:d}'.format(
         params['lstm_numlayers'])]))
-    # model.add(Dense(units=params['lstm_predictions']))
     model.add(Activation('linear'))
     model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
 
@@ -94,7 +94,7 @@ def single_predict(model, x_test, y_test, params):
     return y_hat
 
 
-def range_predict(model, X_test, Y_test, params):
+def range_predict(model, X_test, Y_test, params, batch_size=1):
     """
     Make a prediction for a range of input values, by saturating the lstm
     returns the predictions (unscaled) and the number of errors
@@ -105,11 +105,10 @@ def range_predict(model, X_test, Y_test, params):
         input_vector = X_test[i].reshape(input_shape)
         # Make a prediction, saturating
         for k in range(0, params['num_saturations']):
-            y_hat = model.predict(input_vector,
-                                  batch_size=params['lstm_batch_size'])
+            y_hat = model.predict(input_vector, batch_size=batch_size)
         preds[i] = y_hat
     rmse, num_errors = compute.error(Y_test, preds)
-    return (preds, num_errors)
+    return (preds, rmse, num_errors)
 
 
 def predict(params):
@@ -118,14 +117,13 @@ def predict(params):
     prediction vector, which is returned together with the number of tendency
     errors found
     """
-    adjusted = parameters.adjust(data.read(params, params['pred_dataset']),
-                                 params)
+    raw = data.read(params, params['pred_dataset'])
+    normalized = data.normalize(raw, params)
+    adjusted = parameters.adjust(normalized, params)
     # prepare test data
     _, _, X_test, Y_test = data.prepare(adjusted, params)
-    # Recover the original values of Y to later plot the original price
-    num_preds = Y_test.shape[0]
     # Perform the prediction.
     model1 = model.prediction_setup(params)
     print('Feeding X_test (shape=', X_test.shape, ')')
-    (yhat, num_errors) = range_predict(model1, X_test, Y_test, params)
-    return (params, model1, Y_test, yhat, num_errors)
+    (yhat, rmse, num_errors) = range_predict(model1, X_test, Y_test, params)
+    return (params, model1, Y_test, yhat, rmse, num_errors)

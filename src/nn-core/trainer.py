@@ -37,25 +37,9 @@ save(model, params, prefix='5y', additional_epocs=0)
 #
 # p r e d i c t i n g
 #
-params['pred_model'] = latest_network(params)
-params['pred_weights'] = '{}.h5'.format(params['pred_model'][:-10])
-(params, _, y, yhat, num_errors) = lstm.predict(params)
-plot.prediction(y, yhat, num_errors, params)
-
-#
-#
-#
-#
-# d e b u g
-#
-#
-#
-#
-
-# plt.style.use('dark_background')
-# plt.plot(raw)
-# plt.xlim(0, 100)
-# plt.show()
-# plt.plot(Y_train)
-# plt.xlim(0, 100)
-# plt.show()
+pred = lstm.build(params, batch_size=1)
+pred.set_weights(model.get_weights())
+(yhat, rmse, num_errors) = lstm.range_predict(pred, X_test, Y_test, params)
+real_price = data.denormalize(Y_test, 'tickcloseprice', params)
+pred_price = data.denormalize(yhat, 'tickcloseprice', params)
+plot.prediction(real_price, pred_price, rmse, num_errors, params)

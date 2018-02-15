@@ -38,9 +38,9 @@ def setup_plot(title):
     return ax
 
 
-def prediction(Y, Yhat, n_errs, params):
-    title = 'T.E={:.02f}% ({:d}/{:d})'.format(
-        (n_errs/(len(Yhat)-1)), n_errs, len(Yhat) - 1)
+def prediction(Y, Yhat, rmse, n_errs, params):
+    title = 'RMSE={:.02f}, T.E={:.02f}% ({:d}/{:d})'.format(
+        rmse, (n_errs/(len(Yhat)-1)), n_errs, len(Yhat) - 1)
     ax = setup_plot(title)
     # place the prediction as we did with test_values
     for idx in range(len(Yhat)):

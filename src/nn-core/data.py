@@ -4,8 +4,6 @@ from numpy import empty, inf
 from pathlib import Path
 from os.path import join
 
-from parameters import param_set
-
 
 def read(params, dataset_file=''):
     """
@@ -59,7 +57,7 @@ def normalize(df, params):
     return normd_clean.fillna(0.0).replace([inf, -inf], 0)
 
 
-def denormalize_vector(vector, column_name, params):
+def denormalize(vector, column_name, params):
     """
     Denormalize a vector of values, previosly normalized by the 'normalize'
     method. Denormaliztion needs to know what is the first value in the series
@@ -77,7 +75,7 @@ def denormalize_vector(vector, column_name, params):
         columns=[column_name])
     p0 = params['p0'][column_name]
     denormalized.loc[:, column_name] = p0 * (vector + 1.0)
-    return denormalized
+    return denormalized.values
 
 
 def split(X, Y, num_testcases):
