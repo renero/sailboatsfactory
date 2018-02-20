@@ -84,3 +84,24 @@ def param_set(params, param):
         if params[param] is True:
             return True
     return False
+
+
+def summary(params):
+    width = 65
+    print('_'*width)
+    print('Data')
+    print('='*width)
+    str1 = '({:d}, {:d})'.format(params['raw_numrows'], params['raw_numcols'])
+    str2 = '({:d}, {:d})'.format(params['nrm_numrows'], params['nrm_numcols'])
+    print('{:.<10}: {:<25}{:.<10}: {}'.format('Raw', str1, 'Normalized', str2))
+
+    str1 = '({:d}, {:d}, {:d})'.format(
+        params['num_frames'], params['lstm_timesteps'], params['num_features'])
+    str2 = '({:d}, {:d})'.format(
+        params['num_frames'], params['lstm_predictions'])
+    print('{:.<10}: {:<25}{:.<10}: {}'.format('X', str1, 'Y', str2))
+
+# RAW...: (11553, 5)                  Normalized: (11552, 5)
+# X.....: (11546, 6, 5)               Y.........: (11546, 1)
+# Xtrain: (11446, 6, 5)               Ytrain....: (11446, 1)
+# Xtest.: (100, 6, 5)                 Ytest.....: (100, 1)

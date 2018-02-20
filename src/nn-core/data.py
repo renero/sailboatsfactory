@@ -54,6 +54,8 @@ def normalize(df, params):
         normalized.loc[:, column] = (df.loc[:, column] / p0) - 1.0
     normd_clean = normalized.loc[1:, :].reset_index().drop(['index'], axis=1)
     print('Normalized shape:', normd_clean.shape)
+    params['nrm_numrows'] = normd_clean.shape[0]
+    params['nrm_numcols'] = normd_clean.shape[1]
     return normd_clean.fillna(0.0).replace([inf, -inf], 0)
 
 

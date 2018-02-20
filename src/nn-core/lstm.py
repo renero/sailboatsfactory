@@ -38,6 +38,7 @@ def build(params, batch_size=None):
           .format(1, params['lstm_layer{:d}'.format(1)]))
     model.add(LSTM(
             params['lstm_layer1'],
+            input_shape=(params['lstm_timesteps'], params['num_features']),
             stateful=params['lstm_stateful'],
             unit_forget_bias=params['lstm_forget_bias'],
             unroll=params['lstm_unroll'],
@@ -52,32 +53,61 @@ def build(params, batch_size=None):
             ret_seq_flag = False
         print('Adding layer #{:d} [{:d}]'.format(
             layer+1, params['lstm_layer{:d}'.format(layer+1)]))
-        model.add(LSTM(params['lstm_layer{:d}'.format(layer+1)],
-                       return_sequences=ret_seq_flag))
+        model.add(LSTM(
+            params['lstm_layer{:d}'.format(layer+1)],
+            input_shape=(params['lstm_timesteps'], params['num_features']),
+            stateful=params['lstm_stateful'],
+            unit_forget_bias=params['lstm_forget_bias'],
+            unroll=params['lstm_unroll'],
+            batch_input_shape=(batch_size,
+                               params['lstm_timesteps'],
+                               params['num_features']),
+           return_sequences=ret_seq_flag))
         model.add(Dropout(params['lstm_dropout{:d}'.format(layer+1)]))
 
     # Output layer.
     model.add(Dense(units=1, input_dim=params['lstm_layer{:d}'.format(
         params['lstm_numlayers'])]))
     model.add(Activation('linear'))
-    model.compile(loss=params['lstm_loss'], optimizer=params['lstm_optimizer'])
+    model.compile(
+        loss=params['lstm_loss'],
+        optimizer=params['lstm_optimizer'])
 
     return model
 
 
-def fit(model, X_train, Y_train, params):
+def fit(model, X, y, Xtest, ytest, params):
     """
     Train the model passed as 1st argument, and return the train_loss
     X and Y Training values are passed.
     Parameters dictionary is also necessary.
     """
     train_loss = model.fit(
-                         X_train, Y_train,
-                         verbose=params['keras_verbose_level'],
-                         shuffle=params['lstm_shuffle'],
-                         batch_size=params['lstm_batch_size'],
-                         epochs=params['lstm_num_epochs'])
+        X, y,
+        validation_data=(Xtest, ytest),
+        verbose=params['keras_verbose_level'],
+        shuffle=params['lstm_shuffle'],
+        batch_size=params['lstm_batch_size'],
+        epochs=params['lstm_num_epochs'])
     return train_loss
+
+
+def stateless_fit(model, X, y, Xtest, ytest, params):
+    """
+    Train the model passed as 1st argument, and return the train_loss
+    X and Y Training values are passed.
+    Parameters dictionary is also necessary.
+    """
+    for i in range(params['lstm_num_epochs']):
+        model.fit(
+            X, y,
+            epochs=1,
+            validation_data=(Xtest, ytest),
+            verbose=params['keras_verbose_level'],
+            shuffle=False,
+            batch_size=params['lstm_batch_size'])
+        model.reset_states()
+    return model
 
 
 def single_predict(model, x_test, y_test, params):
@@ -106,6 +136,7 @@ def range_predict(model, X_test, Y_test, params, batch_size=1):
         # Make a prediction, saturating
         for k in range(0, params['num_saturations']):
             y_hat = model.predict(input_vector, batch_size=batch_size)
+        model.reset_states()
         preds[i] = y_hat
     rmse, num_errors = compute.error(Y_test, preds)
     return (preds, rmse, num_errors)

@@ -8,9 +8,9 @@ load_model: ''
 load_weights: ''
 
 # if specified, the weights are saved into 'networks_path'. Same with weights.
-# save_model: True
-# save_weights: True
-# save_predictor: True
+save_model: No
+save_weights: No
+save_predictor: False
 
 # Prediction Parameters
 pred_model: 'model_name_pred.json'
@@ -20,29 +20,27 @@ num_saturations: 1
 
 # dataset preparation
 prepare_normalize: True
-
 num_testcases: 100
-validation_ratio: 0.2
 diff_intervals: 1
 
 # LSTM configuration
-lstm_stateful: False
-lstm_shuffle: False
+lstm_stateful: True
+lstm_shuffle: True
 lstm_forget_bias: False
 lstm_unroll: False
 lstm_loss: 'mse'
 lstm_optimizer: 'rmsprop'
 
-lstm_num_epochs: 5
-lstm_batch_size: 24
-lstm_timesteps: 6
+lstm_num_epochs: 80
+lstm_batch_size: 48
+lstm_timesteps: 24
 lstm_predictions: 1
 
 lstm_numlayers: 1
-lstm_layer1: 1024
+lstm_layer1: 128
 lstm_dropout1: 0.075
 
-keras_verbose_level: 1
+keras_verbose_level: 0
 delimiter: '|'
 columNames:
   - tickcloseprice
@@ -50,27 +48,27 @@ columNames:
   - tickminprice
   - tickmaxprice
   - tickvolume
-  - awesome
-  - macd
-  - positivevolumeindex
-  - negativevolumeindex
-  - rsi
-  - rsi2
-  - exponentialmovingaverage
-  - moneyflowindicator
-  - moneyflowindicator2
-  - bollingermid
-  - bollingerlow
-  - bollingerupper
-  - stochastick
-  - stochasticd
-  - stochasticrsi
-  - volumeweightedaverageprice
-  - dailytime
-  - weeklytime
-  - monthlytime
-  - coppockcurve
-  - avgdirmov
-  - dirmovminus
-  - dirmovplus
-  - chaikinmoneyflow
+#  - awesome
+#  - macd
+#  - positivevolumeindex
+#  - negativevolumeindex
+#  - rsi
+#  - rsi2
+#  - exponentialmovingaverage
+#  - moneyflowindicator
+#  - moneyflowindicator2
+#  - bollingermid
+#  - bollingerlow
+#  - bollingerupper
+#  - stochastick
+#  - stochasticd
+#  - stochasticrsi
+#  - volumeweightedaverageprice
+#  - dailytime
+#  - weeklytime
+#  - monthlytime
+#  - coppockcurve
+#  - avgdirmov
+#  - dirmovminus
+#  - dirmovplus
+#  - chaikinmoneyflow

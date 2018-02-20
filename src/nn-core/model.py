@@ -5,6 +5,7 @@ from pathlib import Path
 import os
 
 import lstm
+from parameters import param_set
 
 
 def load_model(params, prediction=False):
@@ -87,19 +88,19 @@ def save(model, params, prefix='', additional_epocs=0):
     name_suffix = '{0:%Y}{0:%m}{0:%d}_{0:%H}{0:%M}'.format(datetime.now())
     base_name = name_prefix + name_suffix
     # Save the model?
-    if params['save_model']:
+    if param_set(params, 'save_model'):
         model_name = join(save_folder, '{}.json'.format(base_name))
         model_json = model.to_json()
         with open(model_name, "w") as json_file:
             json_file.write(model_json)
         print('Model saved to {}'.format(model_name))
     # Save weights?
-    if params['save_weights'] is True:
+    if param_set(params, 'save_weights') is True:
         net_name = join(save_folder, '{}.h5'.format(base_name))
         model.save_weights(net_name)
         print('Weights saved to {}'.format(net_name))
     # Save predictor?
-    if params['save_predictor']:
+    if param_set(params, 'save_predictor'):
         # Build the predictor model, with batch_size = 1, and save it.
         bs = params['lstm_batch_size']
         params['lstm_batch_size'] = 1
