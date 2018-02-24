@@ -1,41 +1,80 @@
-from os import getpid
+import csv
+
 from numpy.random import seed
 from tensorflow import set_random_seed
 
-import compute
-import data
 import lstm
 import parameters
-
+from data import normalize, prepare, read
+from model import setup
 
 # Initialization of seeds
-set_random_seed(2)
-seed(2)
+set_random_seed(123)
+seed(123)
 
-print('Results to output_{:d}.csv'.format(getpid()))
-print('batch_size;timesteps;tst.error;tst.size;epochs',
-      file=open('output_{:d}.txt'.format(getpid()), "a"))
+
+hyperparams = {
+    'lstm_num_epochs': [1, 2, 4, 6, 8, 16, 32, 64],
+    'lstm_batch_size': [1, 2, 4, 8, 16, 32, 64],
+    'lstm_timesteps': [1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24],
+    'lstm_layer1': [64, 128, 256, 512],
+    'lstm_dropout1': [0.05, 0.075, 0.1, 0.125],
+    'lstm_stateful': [True, False],
+    'lstm_shuffle': [True, False],
+    'lstm_forget_bias': [True, False]}
+
+gridfile = open('grid.csv', 'w')
+grid = csv.writer(gridfile, delimiter='|')
+grid.writerow([
+    'lstm_num_epochs', 'lstm_batch_size', 'lstm_timesteps', 'lstm_layer1',
+    'lstm_dropout1', 'lstm_stateful', 'lstm_shuffle', 'lstm_forget_bias',
+    'rmse', 'num_errors'])
+
+# Set default parameters and read RAW data only once.
 params = parameters.read()
-raw = data.read(params)
-print('Original dataset num samples:', raw.shape)
+for hyperparam in hyperparams.keys():
+    print(hyperparam)
+    params[hyperparam] = hyperparams[hyperparam][0]
+raw = read(params)
 
-# Search through the space of batch_size and timesteps the best
-# trend error. Results are dumped to file output_PID.txt
-for bs in [8, 10, 12, 14, 16]:
-    for ts in [8, 10, 12, 14, 16]:
-        params['lstm_batch_size'] = bs
-        params['lstm_timesteps'] = ts
+# Loop through all possible combinations of hyperparams
+for hyperparam in hyperparams.keys():
+    print(hyperparam)
+    for value in hyperparams[hyperparam]:
+        print('>>> Testing ', hyperparam, ': ', value, sep='')
+        params[hyperparam] = value
+        #
+        # s e t u p
+        #
         adjusted = parameters.adjust(raw, params)
-        X_train, Y_train, X_test, Y_test = data.prepare(adjusted, params)
-        model = lstm.build(params)
-        train_loss = lstm.fit(model, X_train, Y_train, params)
-        Y_hat = model.predict(X_test, batch_size=params['lstm_batch_size'])
-        rmse, num_errors = compute.error(Y_test, Y_hat)
-        te = (num_errors / (len(Y_hat)-1))
-        print('{:d};{:d};{:.02f};{:d};{:d}'
-              .format(bs, ts, te, (len(Y_hat)-1), params['lstm_num_epochs']),
-              file=open('output_{:d}.txt'.format(getpid()), "a"))
-        if te <= 0.15:
-            name = lstm.save(model)
-            print("Saved model:", name)
-        del model
+        X, Y, Xtest, ytest = prepare(normalize(adjusted, params), params)
+        #
+        # t r a i n i n g
+        #
+        model = setup(params)
+        parameters.summary(params)
+        model.summary()
+        lstm.stateless_fit(model, X, Y, Xtest, ytest, params)
+        #
+        # r e b u i l d   &   p r e d i c t
+        #
+        pred = lstm.build(params, batch_size=1)
+        pred.set_weights(model.get_weights())
+        (yhat, rmse, num_errors) = lstm.range_predict(pred, Xtest, ytest, params)
+        #
+        # w r i t e   r e s u l t s
+        #
+        grid.writerow([
+            params['lstm_num_epochs'], params['lstm_batch_size'],
+            params['lstm_timesteps'], params['lstm_layer1'],
+            params['lstm_dropout1'], params['lstm_stateful'],
+            params['lstm_shuffle'], params['lstm_forget_bias'],
+            rmse, num_errors])
+        print(
+            params['lstm_num_epochs'], ';', params['lstm_batch_size'], ';',
+            params['lstm_timesteps'], ';', params['lstm_layer1'], ';',
+            params['lstm_dropout1'], ';', params['lstm_stateful'], ';',
+            params['lstm_shuffle'], ';', params['lstm_forget_bias'], ';',
+            rmse, ';', num_errors)
+
+gridfile.close()
