@@ -56,7 +56,15 @@ def normalize(df, params):
     print('Normalized shape:', normd_clean.shape)
     params['nrm_numrows'] = normd_clean.shape[0]
     params['nrm_numcols'] = normd_clean.shape[1]
-    return normd_clean.fillna(0.0).replace([inf, -inf], 0)
+    df_ready = normd_clean.fillna(0.0).replace([inf, -inf], 0)
+
+    # Setup the windowing of the dataset.
+    params['num_samples'] = df_ready.shape[0]
+    params['num_features'] = df_ready.shape[1]
+    params['num_frames'] = params['num_samples'] - (
+        params['lstm_timesteps'] + params['lstm_predictions']) + 1
+
+    return df_ready
 
 
 def denormalize(vector, column_name, params):
@@ -113,17 +121,12 @@ def prepare(raw_prepared, params):
     [4,2,3]     [[2,6,3],[4,2,3],[5,_,_]]
     [5,3,8]
     """
-    # Setup the windowing of the dataset.
-    params['num_samples'] = raw_prepared.shape[0]
-    params['num_features'] = raw_prepared.shape[1]
-    params['num_frames'] = params['num_samples'] - (
-        params['lstm_timesteps'] + params['lstm_predictions']) + 1
 
     # Build the 3D array (num_frames, num_timesteps, num_features)
-    X = empty((params['num_frames'], params['lstm_timesteps'],
+    X = empty((params['num_frames'],
+               params['lstm_timesteps'],
                params['num_features']))
     Y = empty((params['num_frames'], params['lstm_predictions']))
-    print('X[{}], Y[{}]'.format(X.shape, Y.shape))
     for i in range(params['num_samples'] - params['lstm_timesteps']):
         X[i] = raw_prepared.loc[i:i + params['lstm_timesteps'] - 1, :]
         Y[i] = raw_prepared.loc[

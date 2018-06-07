@@ -31,22 +31,22 @@ lstm_unroll: False
 lstm_loss: 'mse'
 lstm_optimizer: 'rmsprop'
 
-lstm_num_epochs: 80
-lstm_batch_size: 48
-lstm_timesteps: 24
+lstm_num_epochs: 40
+lstm_batch_size: 16
+lstm_timesteps: 2
 lstm_predictions: 1
 
 lstm_numlayers: 1
 lstm_layer1: 128
 lstm_dropout1: 0.075
 
-keras_verbose_level: 0
+keras_verbose_level: 1
 delimiter: '|'
 columNames:
   - tickcloseprice
-  - tickopenprice
-  - tickminprice
-  - tickmaxprice
+#  - tickopenprice
+#  - tickminprice
+#  - tickmaxprice
   - tickvolume
 #  - awesome
 #  - macd

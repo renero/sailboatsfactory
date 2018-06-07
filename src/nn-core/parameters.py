@@ -4,7 +4,10 @@ from sklearn.preprocessing import MinMaxScaler
 from yaml import load
 
 
-def read(filename='params.yaml'):
+import data
+
+
+def initialize(filename='params.yaml'):
     """
     Reads a YAML file within the CWD of the current notebook to read all the
     params from there.
@@ -19,7 +22,11 @@ def read(filename='params.yaml'):
         my_params = load(f)
     my_params['x_scaler'] = MinMaxScaler(feature_range=(-1, 1))
     my_params['y_scaler'] = MinMaxScaler(feature_range=(-1, 1))
-    return my_params
+
+    raw = data.read(my_params)
+    adjusted = adjust(raw, my_params)
+
+    return adjusted, my_params
 
 
 def valid_samples(x, params, all=False):
@@ -72,6 +79,13 @@ def adjust(raw, params):
     new_df = raw[-new_shape:].reset_index().drop(['index'], axis=1)
     params['adj_numrows'] = new_df.shape[0]
     params['adj_numcols'] = new_df.shape[1]
+
+    # Setup the windowing of the dataset.
+    params['num_samples'] = raw.shape[0]
+    params['num_features'] = raw.shape[1]
+    params['num_frames'] = params['num_samples'] - (
+        params['lstm_timesteps'] + params['lstm_predictions']) + 1
+
     return new_df
 
 
@@ -100,6 +114,9 @@ def summary(params):
     str2 = '({:d}, {:d})'.format(
         params['num_frames'], params['lstm_predictions'])
     print('{:.<10}: {:<25}{:.<10}: {}'.format('X', str1, 'Y', str2))
+    print('{:.<10}: {:<25}{:.<10}: {}'.format(
+          'Samples', str(params['num_samples']),
+          'Timesteps', str(params['lstm_timesteps'])))
 
 # RAW...: (11553, 5)                  Normalized: (11552, 5)
 # X.....: (11546, 6, 5)               Y.........: (11546, 1)

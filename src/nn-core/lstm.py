@@ -68,7 +68,7 @@ def build(params, batch_size=None):
     # Output layer.
     model.add(Dense(units=1, input_dim=params['lstm_layer{:d}'.format(
         params['lstm_numlayers'])]))
-    model.add(Activation('linear'))
+    #model.add(Activation('linear'))
     model.compile(
         loss=params['lstm_loss'],
         optimizer=params['lstm_optimizer'])
