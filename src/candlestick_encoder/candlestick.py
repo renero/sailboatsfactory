@@ -4,7 +4,7 @@ from typing import Any, Union
 class Candlestick:
 
     min_relative_size = 0.02
-    shadow_symmetry_diff_threshold = 0.05
+    shadow_symmetry_diff_threshold = 0.1
 
     def calc_parameters(self):
         # positive or negative movement
@@ -138,11 +138,14 @@ class Candlestick:
 
 
     def info(self):
+        print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(self.open, self.high, self.low, self.close))
         print('body center percentile: {:0.2f}'.format(self.mid_body_percentile))
         print('body centered? {}'.format(self.body_in_center))
         print('body in upper half? {}'.format(self.body_in_upper_half))
         print('body in lower half? {}'.format(self.body_in_lower_half))
         print('body relative width: {:0.2f}'.format(self.body_relative_size))
         print('up/lw shdws width: {:0.2f}/{:0.2f}'.format(self.upper_shadow_percentile, self.lower_shadow_percentile))
+        print('up/lw relative diff: {:0.2f}'.format(self.shadows_relative_diff))
         print('upper/lower shadows? {}/{}'.format(self.has_upper_shadow, self.has_lower_shadow))
         print('shadows are symmetric: {}'.format(self.shadows_symmetric))
+        print('--')
