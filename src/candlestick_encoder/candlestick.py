@@ -22,7 +22,7 @@ class Candlestick:
         self.oc_interval_width = self.max - self.min
 
         # Mid point of the body (absolute value)
-        self.mid_body_point = self.open + (abs(self.open - self.close) / 2.0)
+        self.mid_body_point = self.min + (self.oc_interval_width / 2.0)
         # Percentile of the body (relative)
         self.mid_body_percentile = (self.mid_body_point - self.low) / self.hl_interval_width
 
@@ -61,6 +61,12 @@ class Candlestick:
             self.body_in_lower_half = True
         if self.shadows_symmetric is True and self.body_relative_size > self.min_relative_size:
             self.body_in_center = True
+        # None of the above is fulfilled...
+        if any([self.body_in_center, self.body_in_lower_half, self.body_in_upper_half]) is False:
+            if self.lower_shadow_percentile > self.upper_shadow_percentile:
+                self.body_in_upper_half = True
+            else:
+                self.body_in_lower_half = True
 
     def correct_encoding(self):
         """
@@ -139,7 +145,9 @@ class Candlestick:
 
     def info(self):
         print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(self.open, self.high, self.low, self.close))
+        print('mid body point: {:0.2f}'.format(self.mid_body_point))
         print('body center percentile: {:0.2f}'.format(self.mid_body_percentile))
+        print('body min/max percentiles: {:0.2f}/{:0.2f}'.format(self.min_percentile, self.max_percentile))
         print('body centered? {}'.format(self.body_in_center))
         print('body in upper half? {}'.format(self.body_in_upper_half))
         print('body in lower half? {}'.format(self.body_in_lower_half))
@@ -149,3 +157,6 @@ class Candlestick:
         print('upper/lower shadows? {}/{}'.format(self.has_upper_shadow, self.has_lower_shadow))
         print('shadows are symmetric: {}'.format(self.shadows_symmetric))
         print('--')
+
+    def values(self):
+        print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(self.open, self.high, self.low, self.close))
