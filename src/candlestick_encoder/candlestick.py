@@ -133,14 +133,14 @@ class Candlestick:
                 else:
                     if self.body_relative_size <= 0.5 + 0.1:
                         print('  50%')
-                        return self.encode_with('PPPQR')
+                        return self.encode_with('PQRST')
                     else:
-                        if self.body_relative_size <= 0.75 + 0.2:
+                        if self.body_relative_size <= 0.75 + 0.1:
                             print('  75%')
-                            return self.encode_with('SSSTU')
+                            return self.encode_with('UVWXY')
                         else:
                             print('  ~ 100%')
-                            return 'V'
+                            return 'Z'
 
 
     def info(self):
@@ -156,7 +156,7 @@ class Candlestick:
         print('up/lw relative diff: {:0.2f}'.format(self.shadows_relative_diff))
         print('upper/lower shadows? {}/{}'.format(self.has_upper_shadow, self.has_lower_shadow))
         print('shadows are symmetric: {}'.format(self.shadows_symmetric))
-        print('--')
+        print('')
 
     def values(self):
         print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(self.open, self.high, self.low, self.close))

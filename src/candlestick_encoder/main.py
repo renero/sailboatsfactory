@@ -23,7 +23,8 @@ def main():
     for i in range(5):
         c = Candlestick(df.iloc[i], 'colh')
         c.info()
-        print("  {}".format(c.encode_body()))
+        print("  {}\n".format(c.encode_body()))
+        print("--")
 
 
 if __name__ == "__main__":
