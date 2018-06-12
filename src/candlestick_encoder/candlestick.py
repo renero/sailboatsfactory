@@ -1,10 +1,13 @@
-from typing import Any, Union
-
-
 class Candlestick:
 
     min_relative_size = 0.02
     shadow_symmetry_diff_threshold = 0.1
+
+    @staticmethod
+    def div(x, y):
+        if y == 0.0:
+            return 0
+        return x / y
 
     def calc_parameters(self):
         # positive or negative movement
@@ -24,25 +27,25 @@ class Candlestick:
         # Mid point of the body (absolute value)
         self.mid_body_point = self.min + (self.oc_interval_width / 2.0)
         # Percentile of the body (relative)
-        self.mid_body_percentile = (self.mid_body_point - self.low) / self.hl_interval_width
+        self.mid_body_percentile = self.div((self.mid_body_point - self.low), self.hl_interval_width)
 
         # Calc the percentile position of min and max values
-        self.min_percentile = (self.min - self.low) / self.hl_interval_width
-        self.max_percentile = (self.max - self.low) / self.hl_interval_width
+        self.min_percentile = self.div((self.min - self.low), self.hl_interval_width)
+        self.max_percentile = self.div((self.max - self.low), self.hl_interval_width)
 
         # total candle interval range width and shadows lengths
         self.upper_shadow_len = self.high - self.max
-        self.upper_shadow_percentile = self.upper_shadow_len / self.hl_interval_width
+        self.upper_shadow_percentile = self.div(self.upper_shadow_len, self.hl_interval_width)
         self.lower_shadow_len = self.min - self.low
-        self.lower_shadow_percentile = self.lower_shadow_len / self.hl_interval_width
+        self.lower_shadow_percentile = self.div(self.lower_shadow_len, self.hl_interval_width)
 
         # Percentage of HL range occupied by the body.
-        self.body_relative_size = self.oc_interval_width / self.hl_interval_width
+        self.body_relative_size = self.div(self.oc_interval_width, self.hl_interval_width)
 
         # Upper and lower shadows are larger than 2% of the interval range len?
-        if self.upper_shadow_len / self.hl_interval_width > self.min_relative_size:
+        if self.div(self.upper_shadow_len, self.hl_interval_width) > self.min_relative_size:
             self.has_upper_shadow = True
-        if self.lower_shadow_len / self.hl_interval_width > self.min_relative_size:
+        if self.div(self.lower_shadow_len, self.hl_interval_width) > self.min_relative_size:
             self.has_lower_shadow = True
         if self.has_upper_shadow and self.has_lower_shadow:
             self.has_both_shadows = True
@@ -102,7 +105,7 @@ class Candlestick:
 
     def encode_with(self, encoding_substring):
         if self.body_in_center:
-            print('  centered')
+            #print('  centered')
             return encoding_substring[0]
         else:
             if self.has_both_shadows:
@@ -119,29 +122,35 @@ class Candlestick:
                 else:
                     return encoding_substring[4]
 
-    def encode_body(self):
+    def __encode_body(self):
         if self.body_relative_size <= self.min_relative_size:
             return self.encode_with('ABCDE')
         else:
             if self.body_relative_size <= 0.1 + 0.05:
-                print('  10%')
+                #print('  10%')
                 return self.encode_with('FGHIJ')
             else:
                 if self.body_relative_size <= 0.25 + 0.1:
-                    print('  25%')
+                    #print('  25%')
                     return self.encode_with('KLMNO')
                 else:
                     if self.body_relative_size <= 0.5 + 0.1:
-                        print('  50%')
+                        #print('  50%')
                         return self.encode_with('PQRST')
                     else:
                         if self.body_relative_size <= 0.75 + 0.1:
-                            print('  75%')
+                            #print('  75%')
                             return self.encode_with('UVWXY')
                         else:
-                            print('  ~ 100%')
+                            #print('  ~ 100%')
                             return 'Z'
 
+    def encode_body(self):
+        if self.positive:
+            first_letter = 'p'
+        else:
+            first_letter = 'n'
+        return first_letter + self.__encode_body()
 
     def info(self):
         print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(self.open, self.high, self.low, self.close))

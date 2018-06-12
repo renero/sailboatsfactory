@@ -18,13 +18,11 @@ def read(filename):
 
 
 def main():
-    df = read('/Users/renero/Documents/SideProjects/sailboatsfactory/data/100.csv')
-    print(df.head(5), "\n--")
-    for i in range(5):
+    df = read('/Users/renero/Documents/SideProjects/sailboatsfactory/data/ibex_1hr_1y.csv')
+    for i in range(df.shape[0]):
         c = Candlestick(df.iloc[i], 'colh')
-        c.info()
-        print("  {}\n".format(c.encode_body()))
-        print("--")
+        print("{}, {}".format(i, c.encode_body()))
+    print()
 
 
 if __name__ == "__main__":
