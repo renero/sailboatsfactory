@@ -1,0 +1,3 @@
+input_filename: '/Users/renero/Documents/SideProjects/sailboatsfactory/data/ibex_1hr_1y.csv'
+encoding: 'colh'
+output_filename: '/Users/renero/Documents/SideProjects/sailboatsfactory/src/candlestick_encoder/1h1y_cse.csv'
