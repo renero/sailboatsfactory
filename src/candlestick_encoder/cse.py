@@ -57,9 +57,10 @@ def main(arguments):
     if params['output_filename'] is None:
         params['output_filename'] = '/dev/stdout'
     out = open(params['output_filename'], 'w')
+    print("id,cse", file=out)
     for i in range(df.shape[0]):
         c = Candlestick(df.iloc[i], params['encoding'])
-        print("{}, {}".format(i, c.encode_body()), file=out)
+        print("{},{}".format(i, c.encode_body()), file=out)
 
 
 # sys.argv = ['cse.py', '-i', '/path/tpo/file.ext']
