@@ -1,0 +1,23 @@
+# data dependencies
+input_file: './ibex_1y_cse.csv'
+output_dir: './networks'
+
+# dataset parameters
+num_categories: 52
+
+# training parameters
+epochs: 100
+batch_size: 10
+validation_split: 0.1
+verbose: 1
+
+# model parameters
+_l1units: 256
+_l2units: 256
+activation: 'sigmoid'
+
+# training parameters
+epocs: 100
+batch_size: 10
+validation_split: 0.1
+verbose: 1
