@@ -21,6 +21,7 @@ class CSE(object):
     _history = None
     _enc_data = None
     _raw_data = None
+    _input_file = ''
 
     # metadata
     _metadata = {'period': 'unk', 'epochs': 'unk', 'accuracy': 'unk'}
@@ -77,12 +78,15 @@ class CSE(object):
         self._metadata['epochs'] = self._epochs
         return self
 
-    def onehot_encode(self, filename):
+    def onehot_encode(self, filename=None):
         """
         Reads the content of a CSV with candlesticks encoded and transform
         the string encoding into a one_hot encoding
         """
-        self.read_file(filename)
+        if filename is None:
+            self.read_file(self._input_file)
+        else:
+            self.read_file(filename)
         self.to_numerical()
         self._enc_data = pd.DataFrame(
             to_categorical(self._num_data, num_classes=self._num_categories))

@@ -2,7 +2,7 @@ from cse import CSE
 
 cse = CSE().init()
 cse.set_metadata('period', '1y')
-cse.onehot_encode('./ibex_1y_cse.csv')
+cse.onehot_encode()
 cse.to_slidingwindow_series(window_size=3, test_size=.1)
 
 # Load or build a model
@@ -25,3 +25,4 @@ cse.plot_history()
 
 cse._metadata
 cse.exists_output_name()
+cse._input_file
