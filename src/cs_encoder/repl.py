@@ -1,20 +1,39 @@
 import numpy as np
-from cs_encoder.candlestick import Candlestick
-from cs_encoder.ohlc_reader import read_ohlc
-from nn_cse.cs_plt import Csplt
+import pandas as pd
+
+from cs_encoder.cs_encoder import CSEncoder
+from cs_encoder.ticks import Ticks
+from nn_cse.cs_plot import CSPlot
 
 target_cols = [
     'tickopenprice', 'tickmaxprice', 'tickminprice', 'tickcloseprice'
 ]
 ohlc_tags = ['o', 'h', 'l', 'c']
-df = read_ohlc('../data/100.csv', target_cols, ohlc_tags, normalize=True)
+df = Ticks.read_ohlc('../data/100.csv', target_cols, ohlc_tags)
 
-cse = [Candlestick(np.array(df.iloc[i])) for i in range(df.shape[0])]
-for cs in cse:
-    cs.encode_body()
-for index in range(1, len(cse)):
-    cse[index].encode_movement(cse[index-1])
+cse = []
+for index in range(0, df.shape[0]):
+    cse.append(CSEncoder(np.array(df.iloc[index])))
+    cse[index].encode_body()
+    cse[index].encode_movement(cse[index - 1])
 
-Csplt().plot(df[0:2], ohlc_names=ohlc_tags)
+CSPlot().plot(df[0:2], ohlc_names=ohlc_tags)
 
 # TODO: Reconstruir un CS a partir de la codificación de las DELTAS
+
+tick0 = [cse[0].open, cse[0].high, cse[0].low, cse[0].close]
+tick1 = [cse[1].open, cse[1].high, cse[1].low, cse[1].close]
+mm = cse[0].hl_interval_width
+rtick1 = [
+    tick0[0] + CSEncoder.decode_movement(cse[1].encoded_delta_open) * mm,
+    tick0[1] + CSEncoder.decode_movement(cse[1].encoded_delta_high) * mm,
+    tick0[2] + CSEncoder.decode_movement(cse[1].encoded_delta_low) * mm,
+    tick0[3] + CSEncoder.decode_movement(cse[1].encoded_delta_close) * mm
+]
+
+prd = pd.DataFrame(columns=ohlc_tags)
+prd.loc[0] = tick0
+prd.loc[1] = rtick1
+prd.loc[2] = tick1
+prd
+CSPlot().plot(prd, ohlc_names=ohlc_tags)

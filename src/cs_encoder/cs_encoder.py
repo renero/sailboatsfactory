@@ -10,11 +10,14 @@ class CSEncoder:
     min_relative_size = 0.02
     shadow_symmetry_diff_threshold = 0.1
     _diff_tags = ['open', 'close', 'high', 'low', 'min', 'max']
-    _def_upper_limits = [0, 0.1, 0.25, 0.5, 0.75, 1.0]
-    _def_thresholds = [0.02, 0.05, 0.1, 0.1, 0.1, 0.1]
-    _def_prcntg_encodings = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+    _def_upper_limits = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    _def_thresholds = [0.02, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
+    _def_prcntg_encodings = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'L', 'M']
 
-    def __init__(self, values, encoding="ohlc"):
+    # def __init__(self):
+    #     pass
+
+    def __init__(self, values=None, encoding="ohlc"):
         """
         Takes as init argument a numpy array with 4 values corresponding
         to the O, H, L, C values, in the order specified by the second argument
@@ -34,15 +37,16 @@ class CSEncoder:
         self.shadows_relative_diff = 0.0
 
         # Assign the proper values to them
-        if self.correct_encoding() is False:
-            raise ValueError(
-                'Could not find all mandatory chars (o, h, l, c) in encoding ({})'.
-                format(self.encoding))
-        self.open = values[self.encoding.find('O')]
-        self.high = values[self.encoding.find('H')]
-        self.low = values[self.encoding.find('L')]
-        self.close = values[self.encoding.find('C')]
-        self.calc_parameters()
+        if values is not None:
+            if self.correct_encoding() is False:
+                raise ValueError(
+                    'Could not find all mandatory chars (o, h, l, c) in encoding ({})'.
+                    format(self.encoding))
+            self.open = values[self.encoding.find('O')]
+            self.high = values[self.encoding.find('H')]
+            self.low = values[self.encoding.find('L')]
+            self.close = values[self.encoding.find('C')]
+            self.calc_parameters()
 
         # Assign default encodings for movement
         self.encoded_delta_close = 'pA'
@@ -51,7 +55,6 @@ class CSEncoder:
         self.encoded_delta_max = 'pA'
         self.encoded_delta_min = 'pA'
         self.encoded_delta_open = 'pA'
-
 
     @staticmethod
     def div(a, b):
@@ -272,6 +275,18 @@ class CSEncoder:
             setattr(self, 'delta_{}'.format(attr), delta)
             setattr(self, 'encoded_delta_{}'.format(attr), '{}{}'.format(
                 sign_letter, encoding))
+
+    @classmethod
+    def decode_movement(self, code):
+        sign = code[0]
+        letter = code[1]
+        pos = self._def_prcntg_encodings.index(letter)
+        value = self._def_upper_limits[pos] if pos < len(
+            self._def_upper_limits) else self._def_upper_limits[len(
+                self._def_upper_limits)]
+        if sign == 'n':
+            value *= -1.0
+        return value
 
     def info(self):
         v = vars(self)

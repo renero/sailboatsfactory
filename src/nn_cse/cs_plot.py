@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from mpl_finance import candlestick_ohlc
 
 
-class Csplt(object):
+class CSPlot(object):
     """
     Plot a candlestick diagram from a Dataframe. The colum names that contains
     the OHLC values can be specified as an array of strings to the arguments of
