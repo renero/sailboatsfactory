@@ -1,6 +1,6 @@
 # data dependencies
-input_file: './ibex_1y_cse.csv'
-output_dir: './networks'
+input_file: './nn_cse/ibex_1y_cse.csv'
+output_dir: './nn_cse/networks'
 
 # dataset parameters
 num_categories: 52

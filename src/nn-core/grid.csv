@@ -1,1 +1,0 @@
-lstm_num_epochs|lstm_batch_size|lstm_timesteps|lstm_layer1|lstm_dropout1|lstm_stateful|lstm_shuffle|lstm_forget_bias|rmse|num_errors

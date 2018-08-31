@@ -7,13 +7,17 @@ from datetime import datetime
 from keras.layers import LSTM, Dense, Dropout
 from keras.models import Sequential, model_from_json
 from keras.utils import to_categorical
-from os.path import join
+from os.path import join, basename, splitext
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 import inspect
 
 
-class CSE(object):
+class ValidationException(Exception):
+    pass
+
+
+class Csnn(object):
 
     _num_categories = 0
     _window_size = 3
@@ -45,6 +49,9 @@ class CSE(object):
     _optimizer = 'adam'
     _metrics = ['accuracy']
 
+    # Results
+    _history = None
+
     X_train = None
     y_train = None
     X_test = None
@@ -53,11 +60,11 @@ class CSE(object):
     def __init__(self):
         pass
 
-    def init(self):
+    def init(self, params_filepath):
         """
         Init the class with the number of categories used to encode candles
         """
-        with open('params.yaml', 'r') as stream:
+        with open(params_filepath, 'r') as stream:
             try:
                 self.params = yaml.load(stream)
             except yaml.YAMLError as exc:
@@ -75,6 +82,7 @@ class CSE(object):
         for attribute in attribute_names:
             if attribute.startswith('_') and attribute[1:] in self.params:
                 setattr(self, attribute, self.params[attribute[1:]])
+        self._metadata['dataset'] = splitext(basename(self._input_file))[0]
         self._metadata['epochs'] = self._epochs
         return self
 
@@ -123,20 +131,6 @@ class CSE(object):
                 for (idx, value) in enumerate(unique_values)
             }
         return dictionary
-
-    def exists_output_name(self):
-        """
-        Builds a valid name with the metadata and the date.
-        Returns The filename if the name is valid and file does not exists,
-                None otherwise.
-        """
-        self._filename = 'model_{}_{}_{}_{}'.format(
-            datetime.now().strftime('%Y%m%d_%H%M'), self._metadata['period'],
-            self._metadata['epochs'], self._metadata['accuracy'])
-        if Path(join(self._output_dir, self._filename)).is_file():
-            return None
-        else:
-            return self._filename
 
     def set_metadata(self, property, value):
         self._metadata[property] = value
@@ -228,6 +222,24 @@ class CSE(object):
         self._yhat = self._model.predict(self.X_test)
         return self._yhat
 
+    def valid_output_name(self):
+        """
+        Builds a valid name with the metadata and the date.
+        Returns The filename if the name is valid and file does not exists,
+                None otherwise.
+        """
+        self._filename = 'model_{}_{}_{}_{}'.format(
+            datetime.now().strftime(
+                '%Y%m%d_%H%M'), self._metadata['dataset'],
+            self._metadata['epochs'], self._metadata['accuracy'])
+        base_filepath = join(self._output_dir, self._filename)
+        output_filepath = base_filepath
+        idx = 1
+        while Path(output_filepath).is_file() is True:
+            output_filepath = '{}_{:d}'.format(base_filepath + idx)
+            idx += 1
+        return output_filepath
+
     def load_model(self, modelname, summary=True):
         """ load json and create model """
         json_file = open('{}.json'.format(modelname), 'r')
@@ -244,16 +256,22 @@ class CSE(object):
         self._model = loaded_model
         return loaded_model
 
-    def save_model(self, model, modelname):
+    def save_model(self, modelname=None):
         """ serialize model to JSON """
-        model_json = model.to_json()
+        if self._metadata['accuracy'] == 'unk':
+            raise ValidationException('Trying to save without training.')
+        if modelname is None:
+            modelname = self.valid_output_name()
+        model_json = self._model.to_json()
         with open('{}.json'.format(modelname), "w") as json_file:
             json_file.write(model_json)
         # serialize weights to HDF5
-        model.save_weights('{}.h5'.format(modelname))
+        self._model.save_weights('{}.h5'.format(modelname))
         print("Saved model and weights to disk")
 
     def plot_history(self):
+        if self._history is None:
+            raise ValidationException('Trying to plot without training')
         """ summarize history for accuracy and loss """
         plt.plot(self._history.history['acc'])
         plt.plot(self._history.history['val_acc'])
