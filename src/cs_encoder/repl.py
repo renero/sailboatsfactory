@@ -21,19 +21,19 @@ CSPlot().plot(df[0:2], ohlc_names=ohlc_tags)
 
 # TODO: Reconstruir un CS a partir de la codificación de las DELTAS
 
-tick0 = [cse[0].open, cse[0].high, cse[0].low, cse[0].close]
+tick0 = [cse[0].min, cse[0].high, cse[0].low, cse[0].max]
 tick1 = [cse[1].open, cse[1].high, cse[1].low, cse[1].close]
 mm = cse[0].hl_interval_width
 rtick1 = [
-    tick0[0] + CSEncoder.decode_movement(cse[1].encoded_delta_open) * mm,
-    tick0[1] + CSEncoder.decode_movement(cse[1].encoded_delta_high) * mm,
-    tick0[2] + CSEncoder.decode_movement(cse[1].encoded_delta_low) * mm,
-    tick0[3] + CSEncoder.decode_movement(cse[1].encoded_delta_close) * mm
+    tick0[0] + (CSEncoder.decode_movement(cse[1].encoded_delta_min) * mm),
+    tick0[1] + (CSEncoder.decode_movement(cse[1].encoded_delta_high) * mm),
+    tick0[2] + (CSEncoder.decode_movement(cse[1].encoded_delta_low) * mm),
+    tick0[3] + (CSEncoder.decode_movement(cse[1].encoded_delta_max) * mm)
 ]
 
 prd = pd.DataFrame(columns=ohlc_tags)
 prd.loc[0] = tick0
 prd.loc[1] = rtick1
 prd.loc[2] = tick1
-prd
 CSPlot().plot(prd, ohlc_names=ohlc_tags)
+cse[0].info()
