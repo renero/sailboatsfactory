@@ -1,5 +1,5 @@
 # data dependencies
-input_file: './nn_cse/ibex_1y_cse.csv'
+input_file: '../data/100.cse'
 output_dir: './nn_cse/networks'
 
 # dataset parameters

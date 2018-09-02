@@ -105,8 +105,8 @@ class Csnn(object):
         Read the file and return a Series object with a column called 'cse'
         """
         f = pd.read_csv(filename, 'r', header='infer', delimiter=',')
-        self._raw_data = f.cse
-        return f.cse
+        self._raw_data = f['body']
+        return f['body']
 
     def build_encoding_equation(self, n, min, max):
         x1 = 0

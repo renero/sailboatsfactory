@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 
 class CSEncoder:
@@ -11,8 +12,12 @@ class CSEncoder:
     shadow_symmetry_diff_threshold = 0.1
     _diff_tags = ['open', 'close', 'high', 'low', 'min', 'max']
     _def_upper_limits = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    _def_thresholds = [0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02]
-    _def_prcntg_encodings = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'L', 'M']
+    _def_thresholds = [
+        0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02
+    ]
+    _def_prcntg_encodings = [
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'
+    ]
 
     # def __init__(self):
     #     pass
@@ -238,27 +243,6 @@ class CSEncoder:
         return self.__encode_movement(value, encoding, upper_limits,
                                       thresholds, encodings, pos + 1)
 
-    def encode_movement_nosign(self, prev_cs):
-        """Compute the percentage of change for the OHLC values with respect
-        to the relative range of the previous candlestick object (passed as
-        argument). This allows to encode the movement of single candlestick.
-        """
-        # Build a dictionary with ratio of change of the difference between
-        # each pair of OHLC values with respect to the range betwween High
-        # and low.
-        # Each key is in `diff_tags`.
-        # deltas = {
-        #     attr: self.div((getattr(self, attr) - getattr(prev_cs, attr)),
-        #                    prev_cs.hl_interval_width)
-        #     for attr in self._diff_tags
-        # }
-        for attr in self._diff_tags:
-            delta = self.div((getattr(self, attr) - getattr(prev_cs, attr)),
-                             prev_cs.hl_interval_width)
-            enc = self.__encode_movement(delta)
-            setattr(self, 'delta_{}'.format(attr), delta)
-            setattr(self, 'encoded_delta_{}'.format(attr), enc)
-
     def encode_movement(self, prev_cs):
         """Compute the percentage of change for the OHLC values with respect
         to the relative range of the previous candlestick object (passed as
@@ -287,6 +271,30 @@ class CSEncoder:
         if sign == 'n':
             value *= -1.0
         return value
+
+    @classmethod
+    def save(self, cse, filename):
+        """Saves a list of CSE objects to the filename specifed.
+
+        Arguments:
+            - cse(list(CSEEncoder)): list of CSE objects
+            - filename: the path to the file to be written as CSV
+        """
+        body = [cse[i].encoded_body for i in range(len(cse))]
+        delta_open = [cse[i].encoded_delta_open for i in range(len(cse))]
+        delta_high = [cse[i].encoded_delta_high for i in range(len(cse))]
+        delta_low = [cse[i].encoded_delta_low for i in range(len(cse))]
+        delta_close = [cse[i].encoded_delta_close for i in range(len(cse))]
+
+        df = pd.DataFrame(
+            data={
+                'body': body,
+                'open': delta_open,
+                'high': delta_high,
+                'low': delta_low,
+                'close': delta_close
+            })
+        df.to_csv(filename, sep=',', index=False)
 
     def info(self):
         v = vars(self)
