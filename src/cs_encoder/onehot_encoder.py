@@ -1,6 +1,5 @@
 import numpy as np
 from keras.utils import to_categorical
-from pprint import pprint
 
 
 class ValidationError(Exception):
@@ -17,7 +16,9 @@ class OnehotEncoder:
     _signed = False
     _states = set()
     _dict = dict()
+    _inv_dict = dict()
     _sign_dict = {'p': +1, 'n': -1}
+    _inv_sign = {1: 'p', -1: 'n'}
 
     def __init__(self, signed=False):
         self._signed = signed
@@ -25,6 +26,7 @@ class OnehotEncoder:
     def reset(self):
         self._states = set()
         self._dict = dict()
+        self._inv_dict = dict()
         return self
 
     def fit(self, data):
@@ -50,6 +52,7 @@ class OnehotEncoder:
                 [self._states.update(l) for l in data]
         elif len(data.shape) == 1:
             if self._signed is True:
+                print('Updating with: ', ','.join(data))
                 self._states.update([chr[1:] for chr in data])
             else:
                 self._states.update(data)
@@ -57,6 +60,7 @@ class OnehotEncoder:
             raise ValidationError('1D or 2D array expected.', -1)
         # Build the dict.
         self._dict = {k: v for v, k in enumerate(sorted(list(self._states)))}
+        self._inv_dict = {v: k for k, v in self._dict.items()}
         return self
 
     def fit_from_dictionary(self, data):
@@ -65,6 +69,7 @@ class OnehotEncoder:
         else:
             raise ValidationError('1D array expected as dictionary.', -1)
         self._dict = {k: v for v, k in enumerate(sorted(list(self._states)))}
+        self._inv_dict = {v: k for k, v in self._dict.items()}
         return self
 
     def transform(self, data):
@@ -93,24 +98,23 @@ class OnehotEncoder:
             raise ValidationError('1D or 2D array expected.', -1)
         return transformed
 
-
-data = np.array([['a', 'b', 'c'], ['b', 'd', 'e']])
-data1d = np.array(['a', 'b', 'c'])
-my_dict = np.array(['a', 'b', 'c', 'd', 'e'])
-signed_data = np.array([['pa', 'nb', 'pc'], ['nb', 'pd', 'ne']])
-signed_data1d = np.array(['pa', 'nb', 'pc'])
-signed_dict = np.array(['a', 'b', 'c', 'd', 'e'])
-
-ohe = OnehotEncoder(signed=True)
-ohe.fit(signed_data)
-st = ohe.transform(signed_data)
-pprint(st)
-st = ohe.transform(signed_data1d)
-pprint(st)
-
-ohe = OnehotEncoder()
-ohe.fit(data)
-pprint(ohe.transform(data))
-ohe.reset()
-ohe.fit_from_dictionary(my_dict)
-pprint(ohe.transform(data1d))
+    def decode(self, data):
+        if len(data.shape) == 1 or len(data.shape) == 2:
+            num_arrays = data.shape[0] if len(data.shape) == 2 else 1
+            num_strings = data.shape[1] if len(
+                data.shape) == 2 else data.shape[0]
+            data = data.reshape([num_arrays, num_strings])
+            # decode_len = 2 if self._signed else 1
+            decoded = []
+            for i in range(num_arrays):
+                flags = np.isin(data[i], [1, -1])
+                flag_index = np.where(flags)[0][0]
+                invcode = self._inv_dict[flag_index]
+                sign = self._inv_sign[data[i][flag_index]]
+                if self._signed:
+                    decoded.append('{}{}'.format(sign, invcode))
+                else:
+                    decoded.append(invcode)
+        else:
+            raise ValidationError('1D or 2D array expected.', -1)
+        return np.array(decoded)
