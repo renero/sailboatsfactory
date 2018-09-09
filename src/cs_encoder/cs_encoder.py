@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from pathlib import Path
+
 
 class CSEncoder:
     """Takes as init argument a numpy array with 4 values corresponding
@@ -273,6 +275,32 @@ class CSEncoder:
         return value
 
     @classmethod
+    def decode_cse(self, this_cse, prev_cse):
+        """From a CSE and its previous CSE in the time series, returns the
+        reconstructed tick (OHLC)."""
+        mm = prev_cse.hl_interval_width
+        reconstructed_tick = [
+            prev_cse.min +
+            (CSEncoder.decode_movement(this_cse.encoded_delta_min) * mm),
+            prev_cse.high +
+            (CSEncoder.decode_movement(this_cse.encoded_delta_high) * mm),
+            prev_cse.low +
+            (CSEncoder.decode_movement(this_cse.encoded_delta_low) * mm),
+            prev_cse.max +
+            (CSEncoder.decode_movement(this_cse.encoded_delta_max) * mm)
+        ]
+        return reconstructed_tick
+
+    @classmethod
+    def decode_ticks(self, cse, col_names):
+        rec_ticks = [
+            self.decode_cse(cse[i], cse[i - 1]) for i in range(1, len(cse))
+        ]
+        result = pd.DataFrame(rec_ticks)# , col_names)
+        result.columns = col_names
+        return result
+
+    @classmethod
     def save(self, cse, filename):
         """Saves a list of CSE objects to the filename specifed.
 
@@ -280,6 +308,10 @@ class CSEncoder:
             - cse(list(CSEEncoder)): list of CSE objects
             - filename: the path to the file to be written as CSV
         """
+        my_file = Path(filename)
+        if my_file.is_file():
+            return
+
         body = [cse[i].encoded_body for i in range(len(cse))]
         delta_open = [cse[i].encoded_delta_open for i in range(len(cse))]
         delta_high = [cse[i].encoded_delta_high for i in range(len(cse))]
@@ -295,6 +327,16 @@ class CSEncoder:
                 'close': delta_close
             })
         df.to_csv(filename, sep=',', index=False)
+
+    @classmethod
+    def encode_ticks(self, ticks):
+        """Encodes a dataframe of Ticks, returning an array of CSE objects."""
+        cse = []
+        for index in range(0, ticks.shape[0]):
+            cse.append(CSEncoder(np.array(ticks.iloc[index])))
+            cse[index].encode_body()
+            cse[index].encode_movement(cse[index - 1])
+        return cse
 
     def info(self):
         v = vars(self)
