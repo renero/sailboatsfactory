@@ -10,19 +10,36 @@ class CSEncoder:
     string `encoding` (for instance: 'ohlc').
     """
 
+    _cse_zero_open = 0.0
+    _cse_zero_high = 0.0
+    _cse_zero_low = 0.0
+    _cse_zero_close = 0.0
+    _fitted = False
+
     min_relative_size = 0.02
     shadow_symmetry_diff_threshold = 0.1
     _diff_tags = ['open', 'close', 'high', 'low', 'min', 'max']
-    _def_upper_limits = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    _def_thresholds = [
+    _def_body_upper_limits = [
+        0.02, 0.02, 0.02, 0.02, 0.02, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0.1,
+        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+        0.1, 0.1, 0.1
+    ]
+    _def_mvmt_upper_limits = [
+        0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
+    ]
+    _def_body_thresholds = [
         0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02
     ]
-    _def_prcntg_encodings = [
+    _def_mvmt_thresholds = [
+        0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02
+    ]
+    _def_prcntg_body_encodings = [
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
+        'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+    ]
+    _def_prcntg_mvmt_encodings = [
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'
     ]
-
-    # def __init__(self):
-    #     pass
 
     def __init__(self, values=None, encoding="ohlc"):
         """
@@ -62,6 +79,18 @@ class CSEncoder:
         self.encoded_delta_max = 'pA'
         self.encoded_delta_min = 'pA'
         self.encoded_delta_open = 'pA'
+
+    @classmethod
+    def build_new(cls, values):
+        return cls(values)
+
+    @classmethod
+    def fit(self, ticks, col_names):
+        self._cse_zero_open = ticks.loc[ticks.index[0], col_names[0]]
+        self._cse_zero_high = ticks.loc[ticks.index[0], col_names[1]]
+        self._cse_zero_low = ticks.loc[ticks.index[0], col_names[2]]
+        self._cse_zero_close = ticks.loc[ticks.index[0], col_names[3]]
+        self._fitted = True
 
     @staticmethod
     def div(a, b):
@@ -211,9 +240,9 @@ class CSEncoder:
     def __encode_movement(self,
                           value,
                           encoding=None,
-                          upper_limits=_def_upper_limits,
-                          thresholds=_def_thresholds,
-                          encodings=_def_prcntg_encodings,
+                          upper_limits=_def_mvmt_upper_limits,
+                          thresholds=_def_mvmt_thresholds,
+                          encodings=_def_prcntg_mvmt_encodings,
                           pos=0):
         """Tail recursive function to encode a value in one of the possible
         encodings passed as list. The criteria is whether the value is lower
@@ -263,15 +292,17 @@ class CSEncoder:
                 sign_letter, encoding))
 
     @classmethod
-    def decode_movement(self, code):
+    def decode_movement_code(self, code):
         sign = code[0]
         letter = code[1]
-        pos = self._def_prcntg_encodings.index(letter)
-        value = self._def_upper_limits[pos] if pos < len(
-            self._def_upper_limits) else self._def_upper_limits[len(
-                self._def_upper_limits)]
+        pos = self._def_prcntg_mvmt_encodings.index(letter)
+        value = self._def_mvmt_upper_limits[pos] if pos < len(
+            self._def_mvmt_upper_limits) else self._def_mvmt_upper_limits[len(
+                self._def_mvmt_upper_limits)]
+        print('-- value: ', value)
         if sign == 'n':
             value *= -1.0
+            print('----> value: ', value)
         return value
 
     @classmethod
@@ -279,29 +310,48 @@ class CSEncoder:
         """From a CSE and its previous CSE in the time series, returns the
         reconstructed tick (OHLC)."""
         mm = prev_cse.hl_interval_width
+        print(this_cse['o'])
         reconstructed_tick = [
-            prev_cse.min +
-            (CSEncoder.decode_movement(this_cse.encoded_delta_min) * mm),
-            prev_cse.high +
-            (CSEncoder.decode_movement(this_cse.encoded_delta_high) * mm),
-            prev_cse.low +
-            (CSEncoder.decode_movement(this_cse.encoded_delta_low) * mm),
-            prev_cse.max +
-            (CSEncoder.decode_movement(this_cse.encoded_delta_max) * mm)
+            prev_cse.min + (self.decode_movement_code(this_cse['o']) * mm),
+            prev_cse.high + (self.decode_movement_code(this_cse['h']) * mm),
+            prev_cse.low + (self.decode_movement_code(this_cse['l']) * mm),
+            prev_cse.max + (self.decode_movement_code(this_cse['c']) * mm)
         ]
+        # If this CSE is negative, swap the open and close values
+        if reconstructed_tick[0] > reconstructed_tick[3]:
+            open = reconstructed_tick[3]
+            close = reconstructed_tick[0]
+            reconstructed_tick[0] = open
+            reconstructed_tick[3] = close
         return reconstructed_tick
 
-    @classmethod
-    def decode_ticks(self, cse, col_names):
-        rec_ticks = [
-            self.decode_cse(cse[i], cse[i - 1]) for i in range(1, len(cse))
-        ]
-        result = pd.DataFrame(rec_ticks)# , col_names)
+    def cse2ticks(self, cse_codes, col_names):
+        """Reconstruct CSE codes read from a CSE file into ticks"""
+        assert self._fitted, "The encoder has not been fit with data yet!"
+        cse_zero = self.build_new(np.array([
+                self._cse_zero_open, self._cse_zero_high,
+                self._cse_zero_low, self._cse_zero_close
+            ]))
+        cse_decoded = [cse_zero]
+        rec_ticks = [[
+            cse_zero.open, cse_zero.high, cse_zero.low, cse_zero.close
+        ]]
+        for i in range(1, len(cse_codes)):
+            this_cse = cse_codes.loc[cse_codes.index[i], 'o':'c']
+            this_tick = self.decode_cse(this_cse, cse_decoded[i - 1])
+            cse_decoded.append(self.build_new(this_tick))
+            rec_ticks.append(this_tick)
+
+        result = pd.DataFrame(rec_ticks)
         result.columns = col_names
         return result
 
-    @classmethod
-    def save(self, cse, filename):
+    def read_cse(self, filename, col_names):
+        df = pd.read_csv(filename, sep=',')
+        df.columns = col_names
+        return df
+
+    def save_cse(self, cse, filename):
         """Saves a list of CSE objects to the filename specifed.
 
         Arguments:
@@ -328,8 +378,7 @@ class CSEncoder:
             })
         df.to_csv(filename, sep=',', index=False)
 
-    @classmethod
-    def encode_ticks(self, ticks):
+    def ticks2cse(self, ticks):
         """Encodes a dataframe of Ticks, returning an array of CSE objects."""
         cse = []
         for index in range(0, ticks.shape[0]):
