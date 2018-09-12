@@ -310,15 +310,20 @@ class CSEncoder:
         """From a CSE and its previous CSE in the time series, returns the
         reconstructed tick (OHLC)."""
         mm = prev_cse.hl_interval_width
-        print(this_cse['o'])
+        mvmt_sign = [
+            +1 if this_cse[column][0] == 'p' else -1
+            for column in list(['o', 'h', 'l', 'c'])
+        ]
+        mvmt_shift = [(self.decode_movement_code(this_cse[column]) * mm)
+                      for column in list(['o', 'h', 'l', 'c'])]
         reconstructed_tick = [
-            prev_cse.min + (self.decode_movement_code(this_cse['o']) * mm),
-            prev_cse.high + (self.decode_movement_code(this_cse['h']) * mm),
-            prev_cse.low + (self.decode_movement_code(this_cse['l']) * mm),
-            prev_cse.max + (self.decode_movement_code(this_cse['c']) * mm)
+            prev_cse.min + (mvmt_shift[0] * mvmt_sign[0]),
+            prev_cse.high + (mvmt_shift[0] * mvmt_sign[1]),
+            prev_cse.low + (mvmt_shift[0] * mvmt_sign[2]),
+            prev_cse.max + (mvmt_shift[0] * mvmt_sign[3])
         ]
         # If this CSE is negative, swap the open and close values
-        if reconstructed_tick[0] > reconstructed_tick[3]:
+        if this_cse['b'][0] == 'n':
             open = reconstructed_tick[3]
             close = reconstructed_tick[0]
             reconstructed_tick[0] = open
@@ -328,16 +333,17 @@ class CSEncoder:
     def cse2ticks(self, cse_codes, col_names):
         """Reconstruct CSE codes read from a CSE file into ticks"""
         assert self._fitted, "The encoder has not been fit with data yet!"
-        cse_zero = self.build_new(np.array([
-                self._cse_zero_open, self._cse_zero_high,
-                self._cse_zero_low, self._cse_zero_close
+        cse_zero = self.build_new(
+            np.array([
+                self._cse_zero_open, self._cse_zero_high, self._cse_zero_low,
+                self._cse_zero_close
             ]))
         cse_decoded = [cse_zero]
         rec_ticks = [[
             cse_zero.open, cse_zero.high, cse_zero.low, cse_zero.close
         ]]
         for i in range(1, len(cse_codes)):
-            this_cse = cse_codes.loc[cse_codes.index[i], 'o':'c']
+            this_cse = cse_codes.loc[cse_codes.index[i]]
             this_tick = self.decode_cse(this_cse, cse_decoded[i - 1])
             cse_decoded.append(self.build_new(this_tick))
             rec_ticks.append(this_tick)

@@ -20,7 +20,7 @@ ticks = Ticks.read_ohlc(ticks_file, target_cols, ohlc_tags)
 encoder = CSEncoder()
 encoder.fit(ticks, ohlc_tags)
 cse = encoder.ticks2cse(ticks)
-CSPlot().plot(ticks.iloc[0:6, ], ohlc_names=ohlc_tags)
+CSPlot().plot(ticks, ohlc_names=ohlc_tags)
 
 # Save encodings to CSE file
 encoder.save_cse(cse, cse_file)
@@ -29,7 +29,7 @@ encoder.save_cse(cse, cse_file)
 
 cse_codes = encoder.read_cse(cse_file, cse_tags)
 rec_ticks = encoder.cse2ticks(cse_codes, ohlc_tags)
-CSPlot().plot(rec_ticks.iloc[0:6, ], ohlc_names=ohlc_tags)
+CSPlot().plot(rec_ticks, ohlc_names=ohlc_tags)
 
 #
 # -
