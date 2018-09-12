@@ -22,7 +22,7 @@ import pandas
 import yaml
 from docopt import docopt
 
-from candlestick import Candlestick
+from cs_encoder import CSEncoder
 
 
 def read(filename):
@@ -59,7 +59,7 @@ def main(arguments):
     out = open(params['output_filename'], 'w')
     print("id,cse", file=out)
     for i in range(df.shape[0]):
-        c = Candlestick(df.iloc[i], params['encoding'])
+        c = CSEncoder(df.iloc[i], params['encoding'])
         print("{},{}".format(i, c.encode_body()), file=out)
 
 
