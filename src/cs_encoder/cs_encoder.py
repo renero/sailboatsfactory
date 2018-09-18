@@ -1,7 +1,10 @@
 import numpy as np
 import pandas as pd
+from cs_encoder.cs_utils import which_string
 
 from pathlib import Path
+
+from cs_encoder.cs_logger import CSLogger
 
 
 class CSEncoder:
@@ -19,20 +22,13 @@ class CSEncoder:
     min_relative_size = 0.02
     shadow_symmetry_diff_threshold = 0.1
     _diff_tags = ['open', 'close', 'high', 'low', 'min', 'max']
-    _def_body_upper_limits = [
-        0.02, 0.02, 0.02, 0.02, 0.02, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0.1,
-        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-        0.1, 0.1, 0.1
-    ]
+    _def_enc_body_groups = ['ABCDE', 'FGHIJ', 'KLMNO', 'PQRST', 'UVWXY', 'Z']
+    _def_enc_body_sizes = [0.0, 0.10, 0.250, 0.50, 0.75, 1.0]
+    _cs_shift = [0.0, +1.0, -1.0, +2.0, -2.0]
     _def_mvmt_upper_limits = [
-        0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
-    ]
-    _def_body_thresholds = [
-        0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02
-    ]
+        0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     _def_mvmt_thresholds = [
-        0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02
-    ]
+        0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02]
     _def_prcntg_body_encodings = [
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
         'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
@@ -40,8 +36,9 @@ class CSEncoder:
     _def_prcntg_mvmt_encodings = [
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'
     ]
+    _log_level = 0
 
-    def __init__(self, values=None, encoding="ohlc"):
+    def __init__(self, values=None, encoding="ohlc", log_level=0):
         """
         Takes as init argument a numpy array with 4 values corresponding
         to the O, H, L, C values, in the order specified by the second argument
@@ -79,6 +76,10 @@ class CSEncoder:
         self.encoded_delta_max = 'pA'
         self.encoded_delta_min = 'pA'
         self.encoded_delta_open = 'pA'
+
+        # Start the logger
+        self.log = CSLogger(log_level)
+        self._log_level = log_level
 
     @classmethod
     def build_new(cls, values):
@@ -180,6 +181,7 @@ class CSEncoder:
         return all(self.encoding.find(c) != -1 for c in 'OHLC')
 
     def encode_with(self, encoding_substring):
+        err_msg = 'Body centered & 2 shadows but not in upper or lower halves'
         if self.body_in_center:
             # print('  centered')
             return encoding_substring[0]
@@ -191,9 +193,7 @@ class CSEncoder:
                     if self.body_in_lower_half:
                         return encoding_substring[2]
                     else:
-                        raise ValueError(
-                            'Body centered & 2 shadows but not in upper or lower halves'
-                        )
+                        raise ValueError(err_msg)
             else:
                 if self.has_lower_shadow:
                     return encoding_substring[3]
@@ -287,11 +287,39 @@ class CSEncoder:
                 sign_letter = 'p'
             else:
                 sign_letter = 'n'
+            self.log.info(
+                'Enc. {}; Delta={:.2f} ({:.2f} -> {:.2f}) as <{}>'.format(
+                    attr, delta,
+                    getattr(prev_cs, attr), getattr(self, attr),
+                    encoding))
             setattr(self, 'delta_{}'.format(attr), delta)
             setattr(self, 'encoded_delta_{}'.format(attr), '{}{}'.format(
                 sign_letter, encoding))
 
-    @classmethod
+    def adjust_body(self, letter, tick):
+        """Given an encoding letter used for the body of the CS, return the
+        expected positions of the upper and lower parts of the body, according
+        to the encoding rules.abs
+        Parameters:
+          - letter: the letter of the body encoding that determines the size
+                    of the CS as a percentage of the total height of the candle
+          - tick: the tick that needs to be adjusted with the body encoding
+                  information.
+        """
+        # the letter is the second character in the string.
+        (block, pos) = which_string(self.def_enc_body_groups, letter)
+        body_size = self._def_enc_body_sizes[block]
+        M = 0.5 + (body_size/2.0)
+        m = 0.5 - (body_size/2.0)
+        shift = ((1.0-M)/2.0) * self._cs_shift[pos]
+        if tick[0] < tick[3]:
+            tick[0] = m + shift
+            tick[3] = M + shift
+        else:
+            tick[3] = m + shift
+            tick[0] = M + shift
+        return tick
+
     def decode_movement_code(self, code):
         sign = code[0]
         letter = code[1]
@@ -299,13 +327,14 @@ class CSEncoder:
         value = self._def_mvmt_upper_limits[pos] if pos < len(
             self._def_mvmt_upper_limits) else self._def_mvmt_upper_limits[len(
                 self._def_mvmt_upper_limits)]
-        print('-- value: ', value)
+        # print('-- value: ', value)
         if sign == 'n':
             value *= -1.0
-            print('----> value: ', value)
+            # print('----> value: ', value)
+        self.log.info('Decoding <{}> with value: {:.2f}'.format(
+            code, value))
         return value
 
-    @classmethod
     def decode_cse(self, this_cse, prev_cse):
         """From a CSE and its previous CSE in the time series, returns the
         reconstructed tick (OHLC)."""
@@ -314,8 +343,13 @@ class CSEncoder:
             +1 if this_cse[column][0] == 'p' else -1
             for column in list(['o', 'h', 'l', 'c'])
         ]
+        self.log.info('Sign of movement: {}|{}|{}|{}'.format(
+            mvmt_sign[0], mvmt_sign[1], mvmt_sign[2], mvmt_sign[3]))
         mvmt_shift = [(self.decode_movement_code(this_cse[column]) * mm)
                       for column in list(['o', 'h', 'l', 'c'])]
+        self.log.info(
+            'Amount of movement: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
+                mvmt_shift[0], mvmt_shift[1], mvmt_shift[2], mvmt_shift[3]))
         reconstructed_tick = [
             prev_cse.min + (mvmt_shift[0] * mvmt_sign[0]),
             prev_cse.high + (mvmt_shift[0] * mvmt_sign[1]),
@@ -324,10 +358,15 @@ class CSEncoder:
         ]
         # If this CSE is negative, swap the open and close values
         if this_cse['b'][0] == 'n':
+            self.log.info('This CS seems to be negative')
             open = reconstructed_tick[3]
             close = reconstructed_tick[0]
             reconstructed_tick[0] = open
             reconstructed_tick[3] = close
+        self.log.info(
+            '>> Reconstructed tick: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
+                reconstructed_tick[0], reconstructed_tick[1],
+                reconstructed_tick[2], reconstructed_tick[3]))
         return reconstructed_tick
 
     def cse2ticks(self, cse_codes, col_names):
@@ -339,13 +378,23 @@ class CSEncoder:
                 self._cse_zero_close
             ]))
         cse_decoded = [cse_zero]
+        self.log.info('Zero CS created: {:.2f}|{:.2f}|{:.2f}|{:.2f}'.format(
+            self._cse_zero_open, self._cse_zero_high, self._cse_zero_low,
+            self._cse_zero_close))
         rec_ticks = [[
             cse_zero.open, cse_zero.high, cse_zero.low, cse_zero.close
         ]]
         for i in range(1, len(cse_codes)):
             this_cse = cse_codes.loc[cse_codes.index[i]]
+            self.log.info('Decoding: {}|{}|{}|{}|{}'.format(
+                this_cse['b'], this_cse['o'], this_cse['h'], this_cse['l'],
+                this_cse['c']))
             this_tick = self.decode_cse(this_cse, cse_decoded[i - 1])
             cse_decoded.append(self.build_new(this_tick))
+            this_tick = self.adjust_body(this_cse['b'][1], this_tick)
+            self.log.info('Adjusted CS body:{}|{}|{}|{}|{}'.format(
+                this_cse['b'], this_cse['o'], this_cse['h'], this_cse['l'],
+                this_cse['c']))
             rec_ticks.append(this_tick)
 
         result = pd.DataFrame(rec_ticks)
@@ -366,13 +415,14 @@ class CSEncoder:
         """
         my_file = Path(filename)
         if my_file.is_file():
+            self.log.warn('No writing to file as file alrady exists')
             return
 
         body = [cse[i].encoded_body for i in range(len(cse))]
-        delta_open = [cse[i].encoded_delta_open for i in range(len(cse))]
+        delta_open = [cse[i].encoded_delta_min for i in range(len(cse))]
         delta_high = [cse[i].encoded_delta_high for i in range(len(cse))]
         delta_low = [cse[i].encoded_delta_low for i in range(len(cse))]
-        delta_close = [cse[i].encoded_delta_close for i in range(len(cse))]
+        delta_close = [cse[i].encoded_delta_max for i in range(len(cse))]
 
         df = pd.DataFrame(
             data={
@@ -388,7 +438,13 @@ class CSEncoder:
         """Encodes a dataframe of Ticks, returning an array of CSE objects."""
         cse = []
         for index in range(0, ticks.shape[0]):
-            cse.append(CSEncoder(np.array(ticks.iloc[index])))
+            cse.append(
+                CSEncoder(
+                    np.array(ticks.iloc[index]), log_level=self._log_level))
+            self.log.info(
+                'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
+                    cse[index].open, cse[index].high, cse[index].low,
+                    cse[index].close))
             cse[index].encode_body()
             cse[index].encode_movement(cse[index - 1])
         return cse
