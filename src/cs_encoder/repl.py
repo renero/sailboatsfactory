@@ -11,10 +11,11 @@ target_cols = [
 ]
 ohlc_tags = ['o', 'h', 'l', 'c']
 cse_tags = ['b', 'o', 'h', 'l', 'c']
-n = 2
+n = 10
+LOG_LEVEL = 3
 
 ticks = Ticks.read_ohlc(ticks_file, target_cols, ohlc_tags)
-encoder = CSEncoder(log_level=3)
+encoder = CSEncoder(log_level=LOG_LEVEL)
 encoder.fit(ticks, ohlc_tags)
 cse = encoder.ticks2cse(ticks.iloc[:n, ])
 CSPlot().plot(ticks.iloc[:n, ], ohlc_names=ohlc_tags)
@@ -45,5 +46,3 @@ CSPlot().plot(rec_ticks.iloc[:n, ], ohlc_names=ohlc_tags)
 #
 # decoded = ohe.decode(encoded[0])
 # pprint(decoded)
-
-encoder.reshape_body('U')

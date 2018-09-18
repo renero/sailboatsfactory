@@ -26,9 +26,11 @@ class CSEncoder:
     _def_enc_body_sizes = [0.0, 0.10, 0.250, 0.50, 0.75, 1.0]
     _cs_shift = [0.0, +1.0, -1.0, +2.0, -2.0]
     _def_mvmt_upper_limits = [
-        0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
+    ]
     _def_mvmt_thresholds = [
-        0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02]
+        0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02
+    ]
     _def_prcntg_body_encodings = [
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
         'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
@@ -289,8 +291,7 @@ class CSEncoder:
                 sign_letter = 'n'
             self.log.info(
                 'Enc. {}; Delta={:.2f} ({:.2f} -> {:.2f}) as <{}>'.format(
-                    attr, delta,
-                    getattr(prev_cs, attr), getattr(self, attr),
+                    attr, delta, getattr(prev_cs, attr), getattr(self, attr),
                     encoding))
             setattr(self, 'delta_{}'.format(attr), delta)
             setattr(self, 'encoded_delta_{}'.format(attr), '{}{}'.format(
@@ -307,17 +308,29 @@ class CSEncoder:
                   information.
         """
         # the letter is the second character in the string.
-        (block, pos) = which_string(self.def_enc_body_groups, letter)
+        self.log.info(
+            '>> Adjusting tick: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
+                tick[0], tick[1], tick[2], tick[3]))
+        (block, pos) = which_string(self._def_enc_body_groups, letter)
         body_size = self._def_enc_body_sizes[block]
-        M = 0.5 + (body_size/2.0)
-        m = 0.5 - (body_size/2.0)
-        shift = ((1.0-M)/2.0) * self._cs_shift[pos]
+        self.log.info('   letter ({}) => body size: {:.2f}'.format(
+            letter, body_size))
+        # High - Low is the height range the adjustment refers to.
+        tick_range = tick[1] - tick[2]
+        M = 0.5 + (body_size / 2.0)
+        m = 0.5 - (body_size / 2.0)
+        self.log.info('   tick range: {:.2f}, M: {:.2f}, m: {:.2f}'.format(
+            tick_range, M, m))
+        shift = ((1.0 - M) / 2.0) * self._cs_shift[pos]
+        self.log.info('   shift = {:.2f}'.format(shift))
         if tick[0] < tick[3]:
-            tick[0] = m + shift
-            tick[3] = M + shift
+            tick[0] = tick[2] + (m + shift) * tick_range
+            tick[3] = tick[2] + (M + shift) * tick_range
         else:
-            tick[3] = m + shift
-            tick[0] = M + shift
+            tick[3] = tick[2] + (m + shift) * tick_range
+            tick[0] = tick[2] + (M + shift) * tick_range
+        self.log.info('<< New tick: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
+            tick[0], tick[1], tick[2], tick[3]))
         return tick
 
     def decode_movement_code(self, code):
@@ -327,12 +340,9 @@ class CSEncoder:
         value = self._def_mvmt_upper_limits[pos] if pos < len(
             self._def_mvmt_upper_limits) else self._def_mvmt_upper_limits[len(
                 self._def_mvmt_upper_limits)]
-        # print('-- value: ', value)
         if sign == 'n':
             value *= -1.0
-            # print('----> value: ', value)
-        self.log.info('Decoding <{}> with value: {:.2f}'.format(
-            code, value))
+        self.log.info('Decoding <{}> with value: {:.2f}'.format(code, value))
         return value
 
     def decode_cse(self, this_cse, prev_cse):
@@ -392,9 +402,9 @@ class CSEncoder:
             this_tick = self.decode_cse(this_cse, cse_decoded[i - 1])
             cse_decoded.append(self.build_new(this_tick))
             this_tick = self.adjust_body(this_cse['b'][1], this_tick)
-            self.log.info('Adjusted CS body:{}|{}|{}|{}|{}'.format(
-                this_cse['b'], this_cse['o'], this_cse['h'], this_cse['l'],
-                this_cse['c']))
+            self.log.info(
+                'Adjusted CS body: {:.2f}|{:.2f}|{:.2f}|{:.2f}'.format(
+                    this_tick[0], this_tick[1], this_tick[2], this_tick[3]))
             rec_ticks.append(this_tick)
 
         result = pd.DataFrame(rec_ticks)
