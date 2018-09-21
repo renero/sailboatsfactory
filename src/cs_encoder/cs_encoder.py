@@ -84,6 +84,14 @@ class CSEncoder:
         self._log_level = log_level
 
     @classmethod
+    def body_dictionary(self):
+        return np.array(self._def_prcntg_body_encodings)
+
+    @classmethod
+    def movement_dictionary(self):
+        return np.array(self._def_prcntg_mvmt_encodings)
+
+    @classmethod
     def build_new(cls, values):
         return cls(values)
 

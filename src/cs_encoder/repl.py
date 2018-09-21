@@ -1,8 +1,10 @@
+from cs_encoder.onehot_encoder import OnehotEncoder
 from cs_encoder.cs_encoder import CSEncoder
 from cs_encoder.ticks import Ticks
 from cs_encoder.cs_plot import CSPlot
 
-# from cs_encoder.onehot_encoder import OnehotEncoder
+import numpy as np
+from pprint import pprint
 
 ticks_file = '../data/100.csv'
 cse_file = '../data/100.cse'
@@ -11,8 +13,8 @@ target_cols = [
 ]
 ohlc_tags = ['o', 'h', 'l', 'c']
 cse_tags = ['b', 'o', 'h', 'l', 'c']
-n = 10
-LOG_LEVEL = 3
+n = 20
+LOG_LEVEL = 0
 
 ticks = Ticks.read_ohlc(ticks_file, target_cols, ohlc_tags)
 encoder = CSEncoder(log_level=LOG_LEVEL)
@@ -36,13 +38,22 @@ CSPlot().plot(rec_ticks.iloc[:n, ], ohlc_names=ohlc_tags)
 #
 # -
 #
-# ohe = OnehotEncoder(signed=True).fit_from_dictionary(
-#     np.array(CSEncoder._def_prcntg_encodings))
+ohe = OnehotEncoder(signed=True).fit_from_dictionary(
+    encoder.movement_dictionary())
+values_to_encode = np.array([cse[i].encoded_delta_open for i in range(0, 4)])
+pprint(values_to_encode)
+encoded = ohe.transform(values_to_encode)
+pprint(encoded[0])
+decoded = ohe.decode(encoded[0])
+pprint(decoded)
+
 #
-# values_to_encode = np.array([cse[i].encoded_delta_open for i in range(0, 4)])
-# pprint(values_to_encode)
-# encoded = ohe.transform(values_to_encode)
-# pprint(encoded[0])
+# Encode/Decode body part.
 #
-# decoded = ohe.decode(encoded[0])
-# pprint(decoded)
+ohe = OnehotEncoder(signed=True).fit_from_dictionary(encoder.body_dictionary())
+values_to_encode = np.array([cse[i].encoded_body for i in range(0, 4)])
+pprint(values_to_encode)
+encoded = ohe.transform(values_to_encode)
+pprint(encoded[0])
+decoded = ohe.decode(encoded[0])
+pprint(decoded)
