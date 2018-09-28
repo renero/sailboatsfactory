@@ -21,6 +21,8 @@ class Csnn(object):
 
     _num_categories = 0
     _window_size = 3
+    _num_predictions = 1
+    _test_size = 0.1
     _dropout = 0.1
     _history = None
     _enc_data = None
@@ -85,6 +87,65 @@ class Csnn(object):
         self._metadata['dataset'] = splitext(basename(self._input_file))[0]
         self._metadata['epochs'] = self._epochs
         return self
+
+    def valid_samples(self, x, all=False):
+        """
+        Given a candidate number for the total number of samples to be considered
+        for training and test, this function simply substract the number of
+        test cases, predictions and timesteps from it.
+        """
+        if all is True:
+            return x
+        return (x - self.params['num_testcases'] - self.params['_window_size']
+                - self.params['_num_predictions'])
+
+    def find_largest_divisor(self, x, all=False):
+        """
+        Compute a number lower or equal to 'x' that is divisible by the divsor
+        passed as second argument. The flag 'all' informs the function whether
+        the number of samples can be used as such (all=True) or it must be
+        adjusted substracting the number of test cases, predictions and
+        num_timesteps from it.
+        """
+        found = False
+        while x > 0 and found is False:
+            if self.valid_samples(x, all) % self.params['_batch_size'] is 0:
+                found = True
+            else:
+                x -= 1
+        return x
+
+    def adjust(self, raw, params):
+        """
+        Given a raw sequence of samples, it determines the correct number of
+        samples that can be used, given the amount of test cases requested,
+        the timesteps, the nr of predictions, and the batch_size.
+        Returns the raw sequence of samples adjusted, by removing the first
+        elements from the array until shape fulfills TensorFlow conditions.
+        """
+        self.params['_num_samples'] = raw.shape[0]
+        self.params['_num_testcases'] = int(
+            self.params['_num_samples'] * self.params['_test_size'])
+        new_testshape = self.find_largest_divisor(
+            self.params['num_testcases'], all=True)
+        print('Reshaping TEST from [{}] to [{}]'.format(
+            params['num_testcases'], new_testshape))
+        params['num_testcases'] = new_testshape
+
+        new_shape = self.find_largest_divisor(raw.shape[0], all=False)
+        print('Reshaping RAW from [{}] to [{}]'.format(raw.shape,
+                                                       raw[-new_shape:].shape))
+        new_df = raw[-new_shape:].reset_index().drop(['index'], axis=1)
+        params['adj_numrows'] = new_df.shape[0]
+        params['adj_numcols'] = new_df.shape[1]
+
+        # Setup the windowing of the dataset.
+        params['num_samples'] = raw.shape[0]
+        params['num_features'] = raw.shape[1]
+        params['num_frames'] = params['num_samples'] - (
+            params['_window_size'] + params['num_predictions']) + 1
+
+        return new_df
 
     def onehot_encode(self, filename=None):
         """
@@ -155,7 +216,8 @@ class Csnn(object):
         columns.append(df)
         df = pd.concat(columns, axis=1)
         df.fillna(0, inplace=True)
-        return train_test_split(df, test_size=0.1, shuffle=False)
+        return train_test_split(
+            df, test_size=self.params['_test_size'], shuffle=False)
 
     def reshape(self, data):
         num_entries = data.shape[0] * data.shape[1]
@@ -229,8 +291,7 @@ class Csnn(object):
                 None otherwise.
         """
         self._filename = 'model_{}_{}_{}_{}'.format(
-            datetime.now().strftime(
-                '%Y%m%d_%H%M'), self._metadata['dataset'],
+            datetime.now().strftime('%Y%m%d_%H%M'), self._metadata['dataset'],
             self._metadata['epochs'], self._metadata['accuracy'])
         base_filepath = join(self._output_dir, self._filename)
         output_filepath = base_filepath
