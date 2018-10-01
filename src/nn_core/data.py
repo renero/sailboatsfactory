@@ -112,14 +112,16 @@ def prepare(raw_prepared, params):
 
     For num_timesteps=2, 3 features on each row, and making 1 prediction in
     the future, the original raw data (5 x 3) is transformed into:
-    --> (3 x (2+1) x 3) =
+
+        (3 x (2+1) x 3) =
         (num_frames x (num_timesteps + num_predictions) x num_features):
 
-    [1,2,3]     ------- X ------ -- Y --
-    [1,4,5]     [[1,2,3],[1,4,5],[2,_,_]]
-    [2,6,3]  => [[1,4,5],[2,6,3],[4,_,_]]
-    [4,2,3]     [[2,6,3],[4,2,3],[5,_,_]]
-    [5,3,8]
+        [1,2,3]     ------- X ------ -- Y --
+        [1,4,5]     [[1,2,3],[1,4,5],[2,_,_]]
+        [2,6,3]  => [[1,4,5],[2,6,3],[4,_,_]]
+        [4,2,3]     [[2,6,3],[4,2,3],[5,_,_]]
+        [5,3,8]
+
     """
 
     # Build the 3D array (num_frames, num_timesteps, num_features)
