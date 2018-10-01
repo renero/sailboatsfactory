@@ -115,7 +115,7 @@ class Csnn(object):
                 x -= 1
         return x
 
-    def adjust(self, raw, params):
+    def adjust(self, raw):
         """
         Given a raw sequence of samples, it determines the correct number of
         samples that can be used, given the amount of test cases requested,
@@ -129,43 +129,43 @@ class Csnn(object):
         new_testshape = self.find_largest_divisor(
             self.params['num_testcases'], all=True)
         print('Reshaping TEST from [{}] to [{}]'.format(
-            params['num_testcases'], new_testshape))
-        params['num_testcases'] = new_testshape
+            self.params['num_testcases'], new_testshape))
+        self.params['num_testcases'] = new_testshape
 
         new_shape = self.find_largest_divisor(raw.shape[0], all=False)
         print('Reshaping RAW from [{}] to [{}]'.format(raw.shape,
                                                        raw[-new_shape:].shape))
         new_df = raw[-new_shape:].reset_index().drop(['index'], axis=1)
-        params['adj_numrows'] = new_df.shape[0]
-        params['adj_numcols'] = new_df.shape[1]
+        self.params['adj_numrows'] = new_df.shape[0]
+        self.params['adj_numcols'] = new_df.shape[1]
 
         # Setup the windowing of the dataset.
-        params['num_samples'] = raw.shape[0]
-        params['num_features'] = raw.shape[1]
-        params['num_frames'] = params['num_samples'] - (
-            params['_window_size'] + params['num_predictions']) + 1
+        self.params['num_samples'] = raw.shape[0]
+        self.params['num_features'] = raw.shape[1]
+        self.params['num_frames'] = self.params['num_samples'] - (
+            self.params['_window_size'] + self.params['num_predictions']) + 1
 
         return new_df
 
-    def onehot_encode(self, filename=None):
+    def onehot_encode(self):
         """
-        Reads the content of a CSV with candlesticks encoded and transform
-        the string encoding into a one_hot encoding
+        Transform the content of a Dataframe with encoded candlesticks
+        into a one_hot encoding
         """
-        if filename is None:
-            self.read_file(self._input_file)
-        else:
-            self.read_file(filename)
         self.to_numerical()
         self._enc_data = pd.DataFrame(
             to_categorical(self._num_data, num_classes=self._num_categories))
         return self._enc_data
 
-    def read_file(self, filename):
+    def read_file(self, filename=None):
         """
         Read the file and return a Series object with a column called 'cse'
         """
-        f = pd.read_csv(filename, 'r', header='infer', delimiter=',')
+        if filename is None:
+            f_name = self._input_file
+        else:
+            f_name = filename
+        f = pd.read_csv(f_name, 'r', header='infer', delimiter=',')
         self._raw_data = f['body']
         return f['body']
 
