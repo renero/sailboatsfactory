@@ -308,7 +308,7 @@ class CSEncoder:
     def adjust_body(self, letter, tick):
         """Given an encoding letter used for the body of the CS, return the
         expected positions of the upper and lower parts of the body, according
-        to the encoding rules.abs
+        to the encoding rules.
         Parameters:
           - letter: the letter of the body encoding that determines the size
                     of the CS as a percentage of the total height of the candle
@@ -473,7 +473,7 @@ class CSEncoder:
             if isinstance(value, np.float64):
                 print('{:.<25}: {:>.3f}'.format(key, value))
             else:
-                print('{:.<25}: {:>}'.format(key, value))
+                print('{:.<25}: {:>s}'.format(key, value))
 
     def values(self):
         print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(

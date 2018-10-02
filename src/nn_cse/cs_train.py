@@ -2,6 +2,8 @@ from nn_cse.cs_nn import Csnn
 
 cse_nn = Csnn().init('./nn_cse/params.yaml')
 raw = cse_nn.read_file()
+cse_nn.adjust(raw)
+
 cse_nn.onehot_encode()
 cse_nn.to_slidingwindow_series(window_size=3, test_size=.1)
 

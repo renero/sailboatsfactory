@@ -73,17 +73,20 @@ class Csnn(object):
                 print(exc)
 
         # Get the list of object parameters
-        attributes = inspect.getmembers(self,
-                                        lambda a: not (inspect.isroutine(a)))
-        attribute_names = [
-            a[0] for a in attributes
-            if not (a[0].startswith('__') and a[0].endswith('__'))
-        ]
+        # attributes = inspect.getmembers(self,
+        #                                 lambda a: not (inspect.isroutine(a)))
+        # attribute_names = [
+        #     a[0] for a in attributes
+        #     if not (a[0].startswith('__') and a[0].endswith('__'))
+        # ]
 
         # Override internal attributes with param values if name matches
-        for attribute in attribute_names:
-            if attribute.startswith('_') and attribute[1:] in self.params:
-                setattr(self, attribute, self.params[attribute[1:]])
+        # for attribute in attribute_names:
+        #     if attribute.startswith('_') and attribute[1:] in self.params:
+        #         setattr(self, attribute, self.params[attribute[1:]])
+        for param_name in self.params.keys():
+            attribute_name = '_{}'.format(param_name)
+            setattr(self, attribute_name, self.params[param_name])
         self._metadata['dataset'] = splitext(basename(self._input_file))[0]
         self._metadata['epochs'] = self._epochs
         return self
@@ -96,8 +99,8 @@ class Csnn(object):
         """
         if all is True:
             return x
-        return (x - self.params['num_testcases'] - self.params['_window_size']
-                - self.params['_num_predictions'])
+        return (x - self._num_testcases - self._window_size -
+                self._num_predictions)
 
     def find_largest_divisor(self, x, all=False):
         """
@@ -109,7 +112,7 @@ class Csnn(object):
         """
         found = False
         while x > 0 and found is False:
-            if self.valid_samples(x, all) % self.params['_batch_size'] is 0:
+            if self.valid_samples(x, all) % self._batch_size is 0:
                 found = True
             else:
                 x -= 1
@@ -123,14 +126,13 @@ class Csnn(object):
         Returns the raw sequence of samples adjusted, by removing the first
         elements from the array until shape fulfills TensorFlow conditions.
         """
-        self.params['_num_samples'] = raw.shape[0]
-        self.params['_num_testcases'] = int(
-            self.params['_num_samples'] * self.params['_test_size'])
+        self._num_samples = raw.shape[0]
+        self._num_testcases = int(self._num_samples * self._test_size)
         new_testshape = self.find_largest_divisor(
-            self.params['num_testcases'], all=True)
+            self._num_testcases, all=True)
         print('Reshaping TEST from [{}] to [{}]'.format(
-            self.params['num_testcases'], new_testshape))
-        self.params['num_testcases'] = new_testshape
+            self._num_testcases, new_testshape))
+        self._num_testcases = new_testshape
 
         new_shape = self.find_largest_divisor(raw.shape[0], all=False)
         print('Reshaping RAW from [{}] to [{}]'.format(raw.shape,
@@ -140,10 +142,10 @@ class Csnn(object):
         self.params['adj_numcols'] = new_df.shape[1]
 
         # Setup the windowing of the dataset.
-        self.params['num_samples'] = raw.shape[0]
-        self.params['num_features'] = raw.shape[1]
-        self.params['num_frames'] = self.params['num_samples'] - (
-            self.params['_window_size'] + self.params['num_predictions']) + 1
+        self._num_samples = raw.shape[0]
+        self._num_features = raw.shape[1] if len(raw.shape) > 1 else 1
+        self._num_frames = self._num_samples - (
+            self._window_size + self._num_predictions) + 1
 
         return new_df
 

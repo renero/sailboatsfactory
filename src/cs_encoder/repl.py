@@ -13,7 +13,7 @@ target_cols = [
 ]
 ohlc_tags = ['o', 'h', 'l', 'c']
 cse_tags = ['b', 'o', 'h', 'l', 'c']
-n = 20
+n = 100
 LOG_LEVEL = 0
 
 ticks = Ticks.read_ohlc(ticks_file, target_cols, ohlc_tags)
@@ -51,7 +51,7 @@ pprint(decoded)
 # Encode/Decode body part.
 #
 ohe = OnehotEncoder(signed=True).fit_from_dictionary(encoder.body_dictionary())
-values_to_encode = np.array([cse[i].encoded_body for i in range(0, 4)])
+values_to_encode = np.array([cse[i].encoded_body for i in range(n)])
 pprint(values_to_encode)
 encoded = ohe.transform(values_to_encode)
 pprint(encoded[0])
