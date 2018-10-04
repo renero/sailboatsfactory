@@ -1,8 +1,8 @@
 from cs_encoder.oh_encoder import OHEncoder
 from cs_encoder.cs_encoder import CSEncoder
 from cs_encoder.ticks import Ticks
-from nn_cse.cs_nn import Csnn
-from cs_encoder.dataprep import DataPrep
+from cs_encoder.cs_nn import Csnn
+from cs_encoder.dataset import Dataset
 from cs_encoder.params import Params
 # from cs_encoder.cs_plot import CSPlot
 
@@ -22,17 +22,23 @@ encoder.save_cse(cse, params._cse_file)
 # Adjust dataset to fit into NN parameters
 #
 # cse_nn = Csnn().init('./nn_cse/params.yaml')
-prep = DataPrep()
-cse_bodies = prep.adjust(encoder.select_body(cse))
-cse_shifts = prep.adjust(encoder.select_movement(cse))
+data = Dataset()
+cse_bodies = data.adjust(encoder.select_body(cse))
+cse_shifts = data.adjust(encoder.select_movement(cse))
 
 #
 # One hot encoding
 #
 oh_bodies = OHEncoder().fit(encoder.body_dict()).transform(cse_bodies)
 oh_shifts = OHEncoder().fit(encoder.move_dict()).transform(cse_shifts)
-body_sets = prep.train_test_split(data=oh_bodies)
-move_sets = prep.train_test_split(data=oh_shifts)
+body_sets = data.train_test_split(data=oh_bodies)
+move_sets = data.train_test_split(data=oh_shifts)
+
+nn = Csnn(body_sets)
+# Load or build a model
+# model = cse_nn.load_model('./nn_cse/networks/model_20180827_100_0.75')
+model = nn.build_model()
+nn.train(model)
 
 #
 # Reverse Encoding to produce ticks from CSE

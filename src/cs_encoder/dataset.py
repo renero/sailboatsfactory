@@ -5,7 +5,7 @@ import numpy as np
 from cs_encoder.params import Params
 
 
-class DataPrep(Params):
+class Dataset(Params):
 
     X_train = None
     y_train = None
