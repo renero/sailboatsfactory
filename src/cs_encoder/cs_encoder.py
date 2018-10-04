@@ -21,6 +21,7 @@ class CSEncoder:
 
     min_relative_size = 0.02
     shadow_symmetry_diff_threshold = 0.1
+    _movement_columns = ['open', 'high', 'low', 'close']
     _diff_tags = ['open', 'close', 'high', 'low', 'min', 'max']
     _def_enc_body_groups = ['ABCDE', 'FGHIJ', 'KLMNO', 'PQRST', 'UVWXY', 'Z']
     _def_enc_body_sizes = [0.0, 0.10, 0.250, 0.50, 0.75, 1.0]
@@ -473,8 +474,23 @@ class CSEncoder:
             if isinstance(value, np.float64):
                 print('{:.<25}: {:>.3f}'.format(key, value))
             else:
-                print('{:.<25}: {:>s}'.format(key, value))
+                print('{:.<25}: {:>}'.format(key, value))
 
     def values(self):
         print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(
             self.open, self.high, self.low, self.close))
+
+    @classmethod
+    def select_body(self, cse):
+        """Returns the body element of an array of encoded candlesticks"""
+        bodies = np.array([cse[i].encoded_body for i in range(len(cse))])
+        return pd.DataFrame(bodies, columns=['body'])
+
+    @classmethod
+    def select_movement(self, cse):
+        """Returns the body element of an array of encoded candlesticks"""
+        ohlc = np.array([[
+            cse[i].encoded_delta_open, cse[i].encoded_delta_high,
+            cse[i].encoded_delta_low, cse[i].encoded_delta_close
+        ] for i in range(len(cse))])
+        return pd.DataFrame(ohlc, columns=self._movement_columns)
