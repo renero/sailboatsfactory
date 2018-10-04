@@ -36,29 +36,14 @@ cse_bodies = cse_nn.adjust(encoder.select_body(cse))
 cse_shifts = cse_nn.adjust(encoder.select_movement(cse))
 
 #
-# One hot encoding.
+# One hot encoding
 #
-ohe = OnehotEncoder(signed=True).fit_from_dictionary(
-    encoder.movement_dictionary())
-pprint(cse_shifts.values[0:3])
-encoded = ohe.transform(cse_shifts.values)
-oh_shifts = encoded.reshape((encoded.shape[0] * encoded.shape[1]),
-                            encoded.shape[2])
-oh_shifts = oh_shifts.transpose()
-oh_shifts.shape
-oh_shifts[0]
-pprint(encoded[0])
-
-#
-# Encode/Decode body part.
-#
-ohe = OnehotEncoder(signed=True).fit_from_dictionary(encoder.body_dictionary())
-values_to_encode = np.array([cse[i].encoded_body for i in range(n)])
-pprint(values_to_encode)
-encoded = ohe.transform(values_to_encode)
-pprint(encoded[0])
-decoded = ohe.decode(encoded[0])
-pprint(decoded)
+body_encoder = OnehotEncoder().fit_from_dictionary(encoder.body_dict())
+shift_encoder = OnehotEncoder().fit_from_dictionary(encoder.move_dict())
+oh_bodies = body_encoder.transform(cse_bodies.values).reshape(
+    len(cse_bodies), -1)
+oh_shifts = shift_encoder.transform(cse_shifts.values).reshape(
+    len(cse_shifts), -1)
 
 #
 # Reverse Encoding to produce ticks from CSE

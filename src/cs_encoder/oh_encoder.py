@@ -12,7 +12,7 @@ class ValidationError(Exception):
         self.errors = errors
 
 
-class OnehotEncoder:
+class OHEncoder:
     _signed = False
     _states = set()
     _dict = dict()
@@ -20,7 +20,7 @@ class OnehotEncoder:
     _sign_dict = {'p': +1, 'n': -1}
     _inv_sign = {1: 'p', -1: 'n'}
 
-    def __init__(self, signed=False):
+    def __init__(self, signed=True):
         self._signed = signed
 
     def reset(self):
