@@ -21,23 +21,18 @@ encoder.save_cse(cse, params._cse_file)
 #
 # Adjust dataset to fit into NN parameters
 #
-cse_nn = Csnn().init('./nn_cse/params.yaml')
-cse_bodies = cse_nn.adjust(encoder.select_body(cse))
-cse_shifts = cse_nn.adjust(encoder.select_movement(cse))
+# cse_nn = Csnn().init('./nn_cse/params.yaml')
+prep = DataPrep()
+cse_bodies = prep.adjust(encoder.select_body(cse))
+cse_shifts = prep.adjust(encoder.select_movement(cse))
 
 #
 # One hot encoding
 #
 oh_bodies = OHEncoder().fit(encoder.body_dict()).transform(cse_bodies)
 oh_shifts = OHEncoder().fit(encoder.move_dict()).transform(cse_shifts)
-body_sets = DataPrep(
-    data=oh_bodies,
-    window_size=params._window_size,
-    test_size=params._test_size)
-move_sets = DataPrep(
-    data=oh_shifts,
-    window_size=params._window_size,
-    test_size=params._test_size)
+body_sets = prep.train_test_split(data=oh_bodies)
+move_sets = prep.train_test_split(data=oh_shifts)
 
 #
 # Reverse Encoding to produce ticks from CSE
