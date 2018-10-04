@@ -10,7 +10,6 @@ from keras.utils import to_categorical
 from os.path import join, basename, splitext
 from pathlib import Path
 from sklearn.model_selection import train_test_split
-import inspect
 
 
 class ValidationException(Exception):

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from keras.utils import to_categorical
 
 
@@ -63,6 +64,8 @@ class OHEncoder:
         return self
 
     def fit_from_dict(self, data):
+        """ DEPRECATED
+        """
         if len(data.shape) == 1:
             self._states.update(data)
         else:
@@ -78,6 +81,10 @@ class OHEncoder:
         Arguments
 
           - input: DataFrame of dimension (n * m * p)
+
+        Return values
+
+          - DataFrame of dimension ((n*m) * p)
         """
         data = input.values
         if len(data.shape) == 1 or len(data.shape) == 2:
@@ -103,7 +110,7 @@ class OHEncoder:
                 ])
         else:
             raise ValidationError('1D or 2D array expected.', -1)
-        return transformed.reshape(len(input), -1)
+        return pd.DataFrame(transformed.reshape(len(input), -1))
 
     def decode(self, data):
         if len(data.shape) == 1 or len(data.shape) == 2:

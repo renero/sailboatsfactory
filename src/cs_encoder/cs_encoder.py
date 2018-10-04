@@ -96,13 +96,14 @@ class CSEncoder:
     def build_new(cls, values):
         return cls(values)
 
-    @classmethod
+    # @classmethod
     def fit(self, ticks, col_names):
         self._cse_zero_open = ticks.loc[ticks.index[0], col_names[0]]
         self._cse_zero_high = ticks.loc[ticks.index[0], col_names[1]]
         self._cse_zero_low = ticks.loc[ticks.index[0], col_names[2]]
         self._cse_zero_close = ticks.loc[ticks.index[0], col_names[3]]
         self._fitted = True
+        return self
 
     @staticmethod
     def div(a, b):
