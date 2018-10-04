@@ -44,15 +44,14 @@ class OHEncoder:
         ## Return Values:
           - The object, updated.
         """
-        # Check if the array is 1D or 2D
+        # Check if the array is 1D or 2D, and first element has more than 1 ch
         if len(data.shape) == 2:
-            if self._signed is True:
+            if self._signed is True and len(data[0]) > 1:
                 [self._states.update([chr[1:] for chr in l]) for l in data]
             else:
                 [self._states.update(l) for l in data]
         elif len(data.shape) == 1:
-            if self._signed is True:
-                print('Updating with: ', ','.join(data))
+            if self._signed is True and len(data[0]) > 1:
                 self._states.update([chr[1:] for chr in data])
             else:
                 self._states.update(data)
@@ -63,7 +62,7 @@ class OHEncoder:
         self._inv_dict = {v: k for k, v in self._dict.items()}
         return self
 
-    def fit_from_dictionary(self, data):
+    def fit_from_dict(self, data):
         if len(data.shape) == 1:
             self._states.update(data)
         else:
@@ -72,7 +71,15 @@ class OHEncoder:
         self._inv_dict = {v: k for k, v in self._dict.items()}
         return self
 
-    def transform(self, data):
+    def transform(self, input):
+        """ Convert a DataFrame of dimension (n x m x p) into an array of
+        ((nxm) x p), in one hot encoding, with sign.
+
+        Arguments
+
+          - input: DataFrame of dimension (n * m * p)
+        """
+        data = input.values
         if len(data.shape) == 1 or len(data.shape) == 2:
             num_arrays = data.shape[0] if len(data.shape) == 2 else 1
             num_strings = data.shape[1] if len(
@@ -96,7 +103,7 @@ class OHEncoder:
                 ])
         else:
             raise ValidationError('1D or 2D array expected.', -1)
-        return transformed
+        return transformed.reshape(len(input), -1)
 
     def decode(self, data):
         if len(data.shape) == 1 or len(data.shape) == 2:

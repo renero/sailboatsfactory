@@ -130,13 +130,13 @@ class Csnn(object):
         self._num_testcases = int(self._num_samples * self._test_size)
         new_testshape = self.find_largest_divisor(
             self._num_testcases, all=True)
-        print('Reshaping TEST from [{}] to [{}]'.format(
-            self._num_testcases, new_testshape))
+        # print('Reshaping TEST from [{}] to [{}]'.format(
+        #     self._num_testcases, new_testshape))
         self._num_testcases = new_testshape
 
         new_shape = self.find_largest_divisor(raw.shape[0], all=False)
-        print('Reshaping RAW from [{}] to [{}]'.format(raw.shape,
-                                                       raw[-new_shape:].shape))
+        # print('Reshaping RAW from [{}] to [{}]'.format(raw.shape,
+        #                                                raw[-new_shape:].shape))
         new_df = raw[-new_shape:].reset_index().drop(['index'], axis=1)
         self.params['adj_numrows'] = new_df.shape[0]
         self.params['adj_numcols'] = new_df.shape[1]

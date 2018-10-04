@@ -1,4 +1,4 @@
-from cs_encoder.onehot_encoder import OnehotEncoder
+from cs_encoder.oh_encoder import OHEncoder
 from cs_encoder.cs_encoder import CSEncoder
 from cs_encoder.ticks import Ticks
 from cs_encoder.cs_plot import CSPlot
@@ -38,12 +38,8 @@ cse_shifts = cse_nn.adjust(encoder.select_movement(cse))
 #
 # One hot encoding
 #
-body_encoder = OnehotEncoder().fit_from_dictionary(encoder.body_dict())
-shift_encoder = OnehotEncoder().fit_from_dictionary(encoder.move_dict())
-oh_bodies = body_encoder.transform(cse_bodies.values).reshape(
-    len(cse_bodies), -1)
-oh_shifts = shift_encoder.transform(cse_shifts.values).reshape(
-    len(cse_shifts), -1)
+oh_bodies = OHEncoder().fit(encoder.body_dict()).transform(cse_bodies)
+oh_shifts = OHEncoder().fit(encoder.move_dict()).transform(cse_shifts)
 
 #
 # Reverse Encoding to produce ticks from CSE
