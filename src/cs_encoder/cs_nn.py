@@ -1,15 +1,10 @@
-import pandas as pd
-import numpy as np
-import yaml
 import matplotlib.pyplot as plt
 
 from datetime import datetime
 from keras.layers import LSTM, Dense, Dropout
 from keras.models import Sequential, model_from_json
-from keras.utils import to_categorical
 from os.path import join, basename, splitext
 from pathlib import Path
-from sklearn.model_selection import train_test_split
 
 from cs_encoder.params import Params
 
@@ -64,12 +59,17 @@ class Csnn(Params):
         """
         Init the class with the number of categories used to encode candles
         """
+        super(Csnn, self).__init__()
         self._metadata['dataset'] = splitext(basename(self._input_file))[0]
         self._metadata['epochs'] = self._epochs
         self.X_train = dataset.X_train
         self.X_test = dataset.X_test
         self.y_train = dataset.y_train
         self.y_test = dataset.y_test
+        # Override, if necessary, the input and window sizes with the values
+        # found in the dataset.
+        self._window_size = dataset.X_train.shape[1]
+        self._num_categories = dataset.X_train.shape[2]
 
     def build_model(self, summary=True):
         """
@@ -105,7 +105,7 @@ class Csnn(Params):
             batch_size=self._batch_size,
             verbose=self._verbose,
             validation_split=self._validation_split)
-        self._meta['accuracy'] = self._history.history['acc']
+        self._metadata['accuracy'] = self._history.history['acc']
         return self._history
 
     def predict(self):

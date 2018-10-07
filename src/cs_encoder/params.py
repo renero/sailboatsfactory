@@ -4,7 +4,9 @@ import yaml
 class Params(object):
     def __init__(self, params_filepath='./cs_encoder/params.yaml'):
         """
-        Init the class with the number of categories used to encode candles
+        Init a class with all the parameters in the default YAML file.
+        For each of them, create a new class attribute, with the same name
+        but preceded by '_' character.
         """
         with open(params_filepath, 'r') as stream:
             try:

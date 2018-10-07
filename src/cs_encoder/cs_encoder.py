@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
-from cs_encoder.cs_utils import which_string
-
 from pathlib import Path
 
+from cs_encoder.cs_utils import which_string
+from cs_encoder.params import Params
 from cs_encoder.cs_logger import CSLogger
 
 
-class CSEncoder:
+class CSEncoder(Params):
     """Takes as init argument a numpy array with 4 values corresponding
     to the O, H, L, C values, in the order specified by the second argument
     string `encoding` (for instance: 'ohlc').
