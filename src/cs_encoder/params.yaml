@@ -1,3 +1,35 @@
-input_filename: '/Users/renero/Documents/SideProjects/sailboatsfactory/data/ibex_1hr_1y.csv'
+
+# data dependencies
+ticks_file: '../data/1000.csv'
 encoding: 'colh'
-output_filename: '/Users/renero/Documents/SideProjects/sailboatsfactory/src/candlestick_encoder/1h1y_cse.csv'
+delimiter: '|'
+cse_file: '../data/1000.cse'
+columns: ['tickopenprice', 'tickmaxprice', 'tickminprice', 'tickcloseprice']
+ohlc_tags: ['o', 'h', 'l', 'c']
+cse_tags: ['b', 'o', 'h', 'l', 'c']
+n: 1000
+LOG_LEVEL: 0
+
+# dataset parameters
+num_categories: 26
+
+# training parameters
+epochs: 10
+batch_size: 10
+window_size: 3
+validation_split: 0.1
+test_size: 0.1
+verbose: 1
+num_predictions: 1
+
+
+# model parameters
+l1units: 256
+l2units: 256
+activation: 'sigmoid'
+
+# training parameters
+epocs: 100
+batch_size: 10
+validation_split: 0.1
+verbose: 1

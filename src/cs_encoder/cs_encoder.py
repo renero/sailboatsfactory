@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
-from cs_encoder.cs_utils import which_string
-
 from pathlib import Path
 
+from cs_encoder.cs_utils import which_string
+from cs_encoder.params import Params
 from cs_encoder.cs_logger import CSLogger
 
 
-class CSEncoder:
+class CSEncoder(Params):
     """Takes as init argument a numpy array with 4 values corresponding
     to the O, H, L, C values, in the order specified by the second argument
     string `encoding` (for instance: 'ohlc').
@@ -21,6 +21,7 @@ class CSEncoder:
 
     min_relative_size = 0.02
     shadow_symmetry_diff_threshold = 0.1
+    _movement_columns = ['open', 'high', 'low', 'close']
     _diff_tags = ['open', 'close', 'high', 'low', 'min', 'max']
     _def_enc_body_groups = ['ABCDE', 'FGHIJ', 'KLMNO', 'PQRST', 'UVWXY', 'Z']
     _def_enc_body_sizes = [0.0, 0.10, 0.250, 0.50, 0.75, 1.0]
@@ -84,24 +85,25 @@ class CSEncoder:
         self._log_level = log_level
 
     @classmethod
-    def body_dictionary(self):
+    def body_dict(self):
         return np.array(self._def_prcntg_body_encodings)
 
     @classmethod
-    def movement_dictionary(self):
+    def move_dict(self):
         return np.array(self._def_prcntg_mvmt_encodings)
 
     @classmethod
     def build_new(cls, values):
         return cls(values)
 
-    @classmethod
+    # @classmethod
     def fit(self, ticks, col_names):
         self._cse_zero_open = ticks.loc[ticks.index[0], col_names[0]]
         self._cse_zero_high = ticks.loc[ticks.index[0], col_names[1]]
         self._cse_zero_low = ticks.loc[ticks.index[0], col_names[2]]
         self._cse_zero_close = ticks.loc[ticks.index[0], col_names[3]]
         self._fitted = True
+        return self
 
     @staticmethod
     def div(a, b):
@@ -308,7 +310,7 @@ class CSEncoder:
     def adjust_body(self, letter, tick):
         """Given an encoding letter used for the body of the CS, return the
         expected positions of the upper and lower parts of the body, according
-        to the encoding rules.abs
+        to the encoding rules.
         Parameters:
           - letter: the letter of the body encoding that determines the size
                     of the CS as a percentage of the total height of the candle
@@ -478,3 +480,18 @@ class CSEncoder:
     def values(self):
         print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(
             self.open, self.high, self.low, self.close))
+
+    @classmethod
+    def select_body(self, cse):
+        """Returns the body element of an array of encoded candlesticks"""
+        bodies = np.array([cse[i].encoded_body for i in range(len(cse))])
+        return pd.DataFrame(bodies, columns=['body'])
+
+    @classmethod
+    def select_movement(self, cse):
+        """Returns the body element of an array of encoded candlesticks"""
+        ohlc = np.array([[
+            cse[i].encoded_delta_open, cse[i].encoded_delta_high,
+            cse[i].encoded_delta_low, cse[i].encoded_delta_close
+        ] for i in range(len(cse))])
+        return pd.DataFrame(ohlc, columns=self._movement_columns)
