@@ -14,7 +14,10 @@ LOG_LEVEL: 0
 num_categories: 26
 
 # training parameters
-epochs: 10
+loss: 'cosine_proximity'
+optimizer: 'adam'
+metrics: ['cosine_proximity']
+epochs: 100
 batch_size: 10
 window_size: 3
 validation_split: 0.1
@@ -22,11 +25,11 @@ test_size: 0.1
 verbose: 1
 num_predictions: 1
 
-
 # model parameters
 l1units: 256
 l2units: 256
-activation: 'sigmoid'
+activation: 'tanh'
+dropout: 0.2
 
 # training parameters
 epocs: 100

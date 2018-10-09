@@ -31,21 +31,24 @@ oh_shifts = OHEncoder().fit(encoder.move_dict()).transform(cse_shifts)
 body_sets = Dataset().train_test_split(data=oh_bodies)
 move_sets = Dataset().train_test_split(data=oh_shifts)
 
-nn_body = Csnn(body_sets)
+#
 # Load or build a model
-# model = cse_nn.load_model('./nn_cse/networks/model_20180827_100_0.75')
-model_body = nn_body.build_model()
-nn_body.train(model_body)
-
-nn_move = Csnn(move_sets)
-# Load or build a model
-# model = cse_nn.load_model('./nn_cse/networks/model_20180827_100_0.75')
-model_move = nn_move.build_model()
-nn_move.train(model_move)
+#
+nn = []
+data = [body_sets, move_sets]
+for i, model_name in enumerate(['body']):
+    nn.append(Csnn(data[i], model_name))
+    nn[i].build_model()
+    nn[i].train()
 
 #
-# Reverse Encoding to produce ticks from CSE
+# Predict
 #
-cse_codes = encoder.read_cse(params._cse_file, params._cse_tags)
-rec_ticks = encoder.cse2ticks(cse_codes.iloc[:params._n, ], params._ohlc_tags)
-# -> CSPlot().plot(rec_ticks.iloc[:n, ], ohlc_names=ohlc_tags)
+import pandas as pd
+test_bodies = encoder.select_body(cse[100:103])
+test_oh_bodies = OHEncoder().fit(encoder.body_dict()).transform(test_bodies)
+testset = test_oh_bodies.values.reshape((1,3,26))
+y = nn[0].predict(testset)
+import matplotlib.pyplot as plt
+plt.plot(y[0], '-'); plt.show()
+cse[104].info()

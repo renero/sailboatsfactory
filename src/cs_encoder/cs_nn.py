@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from keras.layers import LSTM, Dense, Dropout
 from keras.models import Sequential, model_from_json
+from keras.regularizers import l2
 from os.path import join, basename, splitext
 from pathlib import Path
 
@@ -35,6 +36,7 @@ class Csnn(Params):
     _l1units = 256
     _l2units = 256
     _activation = 'sigmoid'
+    _model = None
 
     # Training
     _epochs = 100
@@ -55,13 +57,14 @@ class Csnn(Params):
     X_test = None
     y_test = None
 
-    def __init__(self, dataset):
+    def __init__(self, dataset, name):
         """
         Init the class with the number of categories used to encode candles
         """
         super(Csnn, self).__init__()
         self._metadata['dataset'] = splitext(basename(self._input_file))[0]
         self._metadata['epochs'] = self._epochs
+        self._metadata['name'] = name
         self.X_train = dataset.X_train
         self.X_test = dataset.X_test
         self.y_train = dataset.y_train
@@ -81,9 +84,15 @@ class Csnn(Params):
             LSTM(
                 input_shape=(self._window_size, self._num_categories),
                 return_sequences=True,
-                units=self._l1units))
+                units=self._l1units,
+                kernel_regularizer=l2(0.0000001),
+                activity_regularizer=l2(0.0000001)))
         model.add(Dropout(self._dropout))
-        model.add(LSTM(self._l2units))
+        model.add(
+            LSTM(
+                self._l2units,
+                kernel_regularizer=l2(0.0000001),
+                activity_regularizer=l2(0.0000001)))
         model.add(Dropout(self._dropout))
         model.add(Dense(self._num_categories, activation=self._activation))
         # model.add(Activation("tanh"))
@@ -91,28 +100,30 @@ class Csnn(Params):
             loss=self._loss, optimizer=self._optimizer, metrics=self._metrics)
         if summary is True:
             model.summary()
+        self._model = model
         return model
 
-    def train(self, model):
+    def train(self):
         """
         Train the model and put the history in an internal stateself.
         Metadata is updated with the accuracy
         """
-        self._history = model.fit(
+        self._history = self._model.fit(
             self.X_train,
             self.y_train,
             epochs=self._epochs,
             batch_size=self._batch_size,
             verbose=self._verbose,
             validation_split=self._validation_split)
-        self._metadata['accuracy'] = self._history.history['acc']
+        self._metadata[self._metrics[0]] = self._history.history[self._metrics[
+            0]]
         return self._history
 
-    def predict(self):
+    def predict(self, test_set):
         """
         Make a prediction over the internal X_test set.
         """
-        self._yhat = self._model.predict(self.X_test)
+        self._yhat = self._model.predict(test_set)
         return self._yhat
 
     def valid_output_name(self):
@@ -121,7 +132,8 @@ class Csnn(Params):
         Returns The filename if the name is valid and file does not exists,
                 None otherwise.
         """
-        self._filename = 'model_{}_{}_{}_{}'.format(
+        self._filename = '{}_{}_{}_{}_{}'.format(
+            self._metadata['name'],
             datetime.now().strftime('%Y%m%d_%H%M'), self._metadata['dataset'],
             self._metadata['epochs'], self._metadata['accuracy'])
         base_filepath = join(self._output_dir, self._filename)

@@ -390,7 +390,16 @@ class CSEncoder(Params):
         return reconstructed_tick
 
     def cse2ticks(self, cse_codes, col_names):
-        """Reconstruct CSE codes read from a CSE file into ticks"""
+        """Reconstruct CSE codes read from a CSE file into ticks
+
+        Arguments
+          - cse_codes: DataFrame with columns 'b', 'o', 'h', 'l', 'c',
+            representing the body of the candlestick, the open, high, low and
+            close encoded values as two-letter strings.
+
+        Returns:
+          - A DataFrame with the open, high, low and close values decoded.
+        """
         assert self._fitted, "The encoder has not been fit with data yet!"
         cse_zero = self.build_new(
             np.array([
