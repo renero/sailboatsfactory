@@ -115,8 +115,7 @@ class Csnn(Params):
             batch_size=self._batch_size,
             verbose=self._verbose,
             validation_split=self._validation_split)
-        self._metadata[self._metrics[0]] = self._history.history[self._metrics[
-            0]]
+        self._metadata[self._metrics[0]] = self._history.history['acc']
         return self._history
 
     def predict(self, test_set):
@@ -132,10 +131,12 @@ class Csnn(Params):
         Returns The filename if the name is valid and file does not exists,
                 None otherwise.
         """
-        self._filename = '{}_{}_{}_{}_{}'.format(
+        self._filename = '{}_{}_{}_{}_{:.3f}'.format(
             self._metadata['name'],
-            datetime.now().strftime('%Y%m%d_%H%M'), self._metadata['dataset'],
-            self._metadata['epochs'], self._metadata['accuracy'])
+            datetime.now().strftime('%Y%m%d_%H%M'),
+            self._metadata['dataset'],
+            self._metadata['epochs'],
+            self._metadata['accuracy'][-1])
         base_filepath = join(self._output_dir, self._filename)
         output_filepath = base_filepath
         idx = 1
@@ -144,7 +145,7 @@ class Csnn(Params):
             idx += 1
         return output_filepath
 
-    def load_model(self, modelname, summary=True):
+    def load(self, modelname, summary=True):
         """ load json and create model """
         json_file = open('{}.json'.format(modelname), 'r')
         loaded_model_json = json_file.read()
@@ -160,7 +161,7 @@ class Csnn(Params):
         self._model = loaded_model
         return loaded_model
 
-    def save_model(self, modelname=None):
+    def save(self, modelname=None):
         """ serialize model to JSON """
         if self._metadata['accuracy'] == 'unk':
             raise ValidationException('Trying to save without training.')

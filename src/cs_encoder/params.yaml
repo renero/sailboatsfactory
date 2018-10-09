@@ -1,9 +1,11 @@
+# What do I do?
+train: False
 
 # data dependencies
-ticks_file: '../data/1000.csv'
+ticks_file: '../data/100.csv'
 encoding: 'colh'
 delimiter: '|'
-cse_file: '../data/1000.cse'
+cse_file: '../data/100.cse'
 columns: ['tickopenprice', 'tickmaxprice', 'tickminprice', 'tickcloseprice']
 ohlc_tags: ['o', 'h', 'l', 'c']
 cse_tags: ['b', 'o', 'h', 'l', 'c']
@@ -16,7 +18,7 @@ num_categories: 26
 # training parameters
 loss: 'cosine_proximity'
 optimizer: 'adam'
-metrics: ['cosine_proximity']
+metrics: ['accuracy']
 epochs: 100
 batch_size: 10
 window_size: 3

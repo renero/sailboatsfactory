@@ -47,6 +47,8 @@ class CSEncoder(Params):
         to the O, H, L, C values, in the order specified by the second argument
         string `encoding` (for instance: 'ohlc').
         """
+        super(CSEncoder, self).__init__()
+
         self.encoding = encoding.upper()
         self.open = self.close = self.high = self.low = 0.0
         self.min = self.max = self.min_percentile = self.max_percentile = 0.0
@@ -389,7 +391,7 @@ class CSEncoder(Params):
                 reconstructed_tick[2], reconstructed_tick[3]))
         return reconstructed_tick
 
-    def cse2ticks(self, cse_codes, col_names):
+    def cse2ticks(self, cse_codes, col_names=None):
         """Reconstruct CSE codes read from a CSE file into ticks
 
         Arguments
@@ -401,6 +403,8 @@ class CSEncoder(Params):
           - A DataFrame with the open, high, low and close values decoded.
         """
         assert self._fitted, "The encoder has not been fit with data yet!"
+        if col_names is None:
+            col_names = self._ohlc_tags
         cse_zero = self.build_new(
             np.array([
                 self._cse_zero_open, self._cse_zero_high, self._cse_zero_low,

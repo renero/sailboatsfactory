@@ -6,6 +6,8 @@ from cs_encoder.dataset import Dataset
 from cs_encoder.params import Params
 # from cs_encoder.cs_plot import CSPlot
 
+import matplotlib.pyplot as plt
+
 #
 # Read raw data, and encode it.
 #
@@ -19,7 +21,6 @@ encoder.save_cse(cse, params._cse_file)
 #
 # Adjust dataset to fit into NN parameters
 #
-# cse_nn = Csnn().init('./nn_cse/params.yaml')
 cse_bodies = Dataset().adjust(encoder.select_body(cse))
 cse_shifts = Dataset().adjust(encoder.select_movement(cse))
 
@@ -38,17 +39,22 @@ nn = []
 data = [body_sets, move_sets]
 for i, model_name in enumerate(['body']):
     nn.append(Csnn(data[i], model_name))
-    nn[i].build_model()
-    nn[i].train()
 
+if params._train is True:
+    for i in range(len(nn)):
+        nn[i].build_model()
+        nn[i].train()
+        nn[i].save()
+else:
+    for i in range(len(nn)):
+        nn[i].load('./body_20181009_1503__100_0.528')
 #
 # Predict
 #
-import pandas as pd
-test_bodies = encoder.select_body(cse[100:103])
+test_bodies = encoder.select_body(cse[50:53])
 test_oh_bodies = OHEncoder().fit(encoder.body_dict()).transform(test_bodies)
-testset = test_oh_bodies.values.reshape((1,3,26))
+testset = test_oh_bodies.values.reshape((1, 3, 26))
 y = nn[0].predict(testset)
-import matplotlib.pyplot as plt
-plt.plot(y[0], '-'); plt.show()
-cse[104].info()
+plt.plot(y[0], '.-')
+cse[54].info()
+encoder.cse2ticks([cse[54]])
