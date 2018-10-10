@@ -131,7 +131,7 @@ class Csnn(Params):
         Returns The filename if the name is valid and file does not exists,
                 None otherwise.
         """
-        self._filename = '{}_{}_{}_{}_{:.3f}'.format(
+        self._filename = '{}_{}_p{}_e{}_a{:.4f}'.format(
             self._metadata['name'],
             datetime.now().strftime('%Y%m%d_%H%M'),
             self._metadata['dataset'],
@@ -148,12 +148,13 @@ class Csnn(Params):
     def load(self, modelname, summary=True):
         """ load json and create model """
         json_file = open('{}.json'.format(modelname), 'r')
+        self.log.info('Reading json model file: {}'.format(json_file))
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
         # load weights into new model
+        self.log.info('Reading h5 file: {}.h5'.format(modelname))
         loaded_model.load_weights('{}.h5'.format(modelname))
-        print("Loaded model from disk")
         loaded_model.compile(
             loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
         if summary is True:

@@ -2,16 +2,17 @@
 train: False
 
 # data dependencies
-ticks_file: '../data/100.csv'
+ticks_file: '../data/1000.csv'
 encoding: 'colh'
 delimiter: '|'
-cse_file: '../data/100.cse'
+cse_file: '../data/1000.cse'
 columns: ['tickopenprice', 'tickmaxprice', 'tickminprice', 'tickcloseprice']
 cse_colnames: ['body', 'open', 'high', 'low', 'close']
 ohlc_tags: ['o', 'h', 'l', 'c']
 cse_tags: ['b', 'o', 'h', 'l', 'c']
 n: 1000
-LOG_LEVEL: 0
+log_level: 3
+model_filename: ['./body_20181010_1808_p1000_e100_a0.5135']
 
 # dataset parameters
 num_categories: 26

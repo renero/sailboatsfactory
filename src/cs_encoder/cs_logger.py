@@ -1,5 +1,6 @@
 class CSLogger:
 
+    _DEBUG = 4
     _INFO = 3
     _WARN = 2
     _ERROR = 1
@@ -8,6 +9,11 @@ class CSLogger:
 
     def __init__(self, level=0):
         self._level = level
+
+    def debug(self, msg):
+        if self._level < self._DEBUG:
+            return
+        print('DEBUG: {}'.format(msg))
 
     def info(self, msg):
         if self._level < self._INFO:

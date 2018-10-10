@@ -8,21 +8,22 @@ from cs_encoder.params import Params
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 #
 # Read raw data, and encode it.
 #
 params = Params()
 if params._cse_file is not None:
+    params.log.info('Reading and encoding ticksfile: {}'.format(
+        params._ticks_file))
     ticks = Ticks().read_ohlc()
-    encoder = CSEncoder(log_level=params._LOG_LEVEL).fit(
-        ticks, params._ohlc_tags)
+    encoder = CSEncoder().fit(ticks, params._ohlc_tags)
     cse = encoder.ticks2cse(ticks.iloc[:params._n, ])
     encoder.save_cse(cse, params._cse_file)
     # -> CSPlot().plot(ticks.iloc[:n, ], ohlc_names=ohlc_tags)
 else:
-    encoder = CSEncoder(log_level=params._LOG_LEVEL)
+    params.log.info('Reading CSE from file: {}'.format(params._cse_file))
+    encoder = CSEncoder()
     cse = encoder.read_cse()
 
 #
@@ -54,7 +55,7 @@ if params._train is True:
         nn[i].save()
 else:
     for i in range(len(nn)):
-        nn[i].load('./body_20181009_1503__100_0.528')
+        nn[i].load(params._model_filename[i])
 #
 # Predict
 #
