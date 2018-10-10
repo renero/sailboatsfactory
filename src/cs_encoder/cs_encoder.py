@@ -434,9 +434,12 @@ class CSEncoder(Params):
         result.columns = col_names
         return result
 
-    def read_cse(self, filename, col_names):
-        df = pd.read_csv(filename, sep=',')
-        df.columns = col_names
+    def read_cse(self, filename=None, col_names=None):
+        if filename is None:
+            df = pd.read_csv(self._cse_file, sep=',')
+        else:
+            df = pd.read_csv(filename, sep=',')
+        df.columns = col_names if col_names is not None else self._cse_colnames
         return df
 
     def save_cse(self, cse, filename):
@@ -487,7 +490,7 @@ class CSEncoder(Params):
         for key, value in sorted(v.items(), key=lambda x: x[0]):
             if isinstance(value, np.float64):
                 print('{:.<25}: {:>.3f}'.format(key, value))
-            else:
+            elif isinstance(value, str) or isinstance(value, int):
                 print('{:.<25}: {:>}'.format(key, value))
 
     def values(self):

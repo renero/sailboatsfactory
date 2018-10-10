@@ -7,6 +7,7 @@ encoding: 'colh'
 delimiter: '|'
 cse_file: '../data/100.cse'
 columns: ['tickopenprice', 'tickmaxprice', 'tickminprice', 'tickcloseprice']
+cse_colnames: ['body', 'open', 'high', 'low', 'close']
 ohlc_tags: ['o', 'h', 'l', 'c']
 cse_tags: ['b', 'o', 'h', 'l', 'c']
 n: 1000
