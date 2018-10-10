@@ -62,7 +62,7 @@ class Csnn(Params):
         Init the class with the number of categories used to encode candles
         """
         super(Csnn, self).__init__()
-        self._metadata['dataset'] = splitext(basename(self._input_file))[0]
+        self._metadata['dataset'] = splitext(basename(self._ticks_file))[0]
         self._metadata['epochs'] = self._epochs
         self._metadata['name'] = name
         self.X_train = dataset.X_train
