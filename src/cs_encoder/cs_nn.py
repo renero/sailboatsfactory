@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 from datetime import datetime
 from keras.layers import LSTM, Dense, Dropout
@@ -125,6 +126,25 @@ class Csnn(Params):
         self._yhat = self._model.predict(test_set)
         return self._yhat
 
+    def hardmax(self, y):
+        """From the output of a tanh layer, this method makes every position
+        in the vector equal to zero, except the largest one, which is valued
+        -1 or +1.
+
+        Argument:
+          - A numpy vector of predictions of shape (1, p) with values in
+            the range (-1, 1)
+        Returns:
+          - A numpy vector of predictions of shape (1, p) with all elements
+            in the vector equal to 0, except the max one, which is -1 or +1
+        """
+        min = np.argmin(y)
+        max = np.argmax(y)
+        pos = max if abs(y[0][max]) > abs(y[0][min]) else min
+        y_max = np.zeros(y.shape)
+        y_max[0][pos] = 1.0 if pos == max else -1.0
+        return y_max
+
     def valid_output_name(self):
         """
         Builds a valid name with the metadata and the date.
@@ -147,13 +167,12 @@ class Csnn(Params):
 
     def load(self, modelname, summary=True):
         """ load json and create model """
+        self.log.info('Reading model file: {}'.format(modelname))
         json_file = open('{}.json'.format(modelname), 'r')
-        self.log.info('Reading json model file: {}'.format(json_file))
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
         # load weights into new model
-        self.log.info('Reading h5 file: {}.h5'.format(modelname))
         loaded_model.load_weights('{}.h5'.format(modelname))
         loaded_model.compile(
             loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
