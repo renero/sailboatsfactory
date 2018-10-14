@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 from datetime import datetime
 from keras.layers import LSTM, Dense, Dropout
 from keras.models import Sequential, model_from_json
+from keras.regularizers import l2
 from os.path import join, basename, splitext
 from pathlib import Path
 
@@ -35,6 +37,7 @@ class Csnn(Params):
     _l1units = 256
     _l2units = 256
     _activation = 'sigmoid'
+    _model = None
 
     # Training
     _epochs = 100
@@ -55,13 +58,14 @@ class Csnn(Params):
     X_test = None
     y_test = None
 
-    def __init__(self, dataset):
+    def __init__(self, dataset, name):
         """
         Init the class with the number of categories used to encode candles
         """
         super(Csnn, self).__init__()
-        self._metadata['dataset'] = splitext(basename(self._input_file))[0]
+        self._metadata['dataset'] = splitext(basename(self._ticks_file))[0]
         self._metadata['epochs'] = self._epochs
+        self._metadata['name'] = name
         self.X_train = dataset.X_train
         self.X_test = dataset.X_test
         self.y_train = dataset.y_train
@@ -70,6 +74,7 @@ class Csnn(Params):
         # found in the dataset.
         self._window_size = dataset.X_train.shape[1]
         self._num_categories = dataset.X_train.shape[2]
+        self.log.info('NN created with name: {}'.format(name))
 
     def build_model(self, summary=True):
         """
@@ -81,9 +86,15 @@ class Csnn(Params):
             LSTM(
                 input_shape=(self._window_size, self._num_categories),
                 return_sequences=True,
-                units=self._l1units))
+                units=self._l1units,
+                kernel_regularizer=l2(0.0000001),
+                activity_regularizer=l2(0.0000001)))
         model.add(Dropout(self._dropout))
-        model.add(LSTM(self._l2units))
+        model.add(
+            LSTM(
+                self._l2units,
+                kernel_regularizer=l2(0.0000001),
+                activity_regularizer=l2(0.0000001)))
         model.add(Dropout(self._dropout))
         model.add(Dense(self._num_categories, activation=self._activation))
         # model.add(Activation("tanh"))
@@ -91,29 +102,51 @@ class Csnn(Params):
             loss=self._loss, optimizer=self._optimizer, metrics=self._metrics)
         if summary is True:
             model.summary()
+        self._model = model
         return model
 
-    def train(self, model):
+    def train(self):
         """
         Train the model and put the history in an internal stateself.
         Metadata is updated with the accuracy
         """
-        self._history = model.fit(
+        self._history = self._model.fit(
             self.X_train,
             self.y_train,
             epochs=self._epochs,
             batch_size=self._batch_size,
             verbose=self._verbose,
             validation_split=self._validation_split)
-        self._metadata['accuracy'] = self._history.history['acc']
+        self._metadata[self._metrics[0]] = self._history.history['acc']
         return self._history
 
-    def predict(self):
+    def predict(self, test_set):
         """
         Make a prediction over the internal X_test set.
         """
-        self._yhat = self._model.predict(self.X_test)
+        self._yhat = self._model.predict(test_set)
         return self._yhat
+
+    def hardmax(self, y):
+        """From the output of a tanh layer, this method makes every position
+        in the vector equal to zero, except the largest one, which is valued
+        -1 or +1.
+
+        Argument:
+          - A numpy vector of predictions of shape (1, p) with values in
+            the range (-1, 1)
+        Returns:
+          - A numpy vector of predictions of shape (1, p) with all elements
+            in the vector equal to 0, except the max one, which is -1 or +1
+        """
+        self.log.debug('Getting hardmax of: {}'.format(y))
+        min = np.argmin(y)
+        max = np.argmax(y)
+        pos = max if abs(y[max]) > abs(y[min]) else min
+        y_max = np.zeros(y.shape)
+        y_max[pos] = 1.0 if pos == max else -1.0
+        self.log.debug('Hardmax position = {}'.format(y_max))
+        return y_max
 
     def valid_output_name(self):
         """
@@ -121,9 +154,13 @@ class Csnn(Params):
         Returns The filename if the name is valid and file does not exists,
                 None otherwise.
         """
-        self._filename = 'model_{}_{}_{}_{}'.format(
-            datetime.now().strftime('%Y%m%d_%H%M'), self._metadata['dataset'],
-            self._metadata['epochs'], self._metadata['accuracy'])
+        self._filename = '{}_{}_{}_w{}_e{}_a{:.4f}'.format(
+            self._metadata['name'],
+            datetime.now().strftime('%Y%m%d_%H%M'),
+            self._metadata['dataset'],
+            self._window_size,
+            self._epochs,
+            self._metadata['accuracy'][-1])
         base_filepath = join(self._output_dir, self._filename)
         output_filepath = base_filepath
         idx = 1
@@ -132,15 +169,15 @@ class Csnn(Params):
             idx += 1
         return output_filepath
 
-    def load_model(self, modelname, summary=True):
+    def load(self, modelname, summary=True):
         """ load json and create model """
+        self.log.info('Reading model file: {}'.format(modelname))
         json_file = open('{}.json'.format(modelname), 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
         # load weights into new model
         loaded_model.load_weights('{}.h5'.format(modelname))
-        print("Loaded model from disk")
         loaded_model.compile(
             loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
         if summary is True:
@@ -148,7 +185,7 @@ class Csnn(Params):
         self._model = loaded_model
         return loaded_model
 
-    def save_model(self, modelname=None):
+    def save(self, modelname=None):
         """ serialize model to JSON """
         if self._metadata['accuracy'] == 'unk':
             raise ValidationException('Trying to save without training.')

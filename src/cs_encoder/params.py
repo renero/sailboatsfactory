@@ -1,4 +1,5 @@
 import yaml
+from cs_encoder.cs_logger import CSLogger
 
 
 class Params(object):
@@ -17,3 +18,6 @@ class Params(object):
         for param_name in self.params.keys():
             attribute_name = '_{}'.format(param_name)
             setattr(self, attribute_name, self.params[param_name])
+
+        # Start the logger
+        self.log = CSLogger(self._log_level)

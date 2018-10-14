@@ -4,48 +4,60 @@ from cs_encoder.ticks import Ticks
 from cs_encoder.cs_nn import Csnn
 from cs_encoder.dataset import Dataset
 from cs_encoder.params import Params
-# from cs_encoder.cs_plot import CSPlot
+from cs_encoder.predict import Predict
 
 #
 # Read raw data, and encode it.
 #
 params = Params()
-ticks = Ticks().read_ohlc()
-encoder = CSEncoder(log_level=params._LOG_LEVEL).fit(ticks, params._ohlc_tags)
-cse = encoder.ticks2cse(ticks.iloc[:params._n, ])
-encoder.save_cse(cse, params._cse_file)
-# -> CSPlot().plot(ticks.iloc[:n, ], ohlc_names=ohlc_tags)
+if params._cse_file is not None:
+    params.log.info('Reading and encoding ticksfile: {}'.format(
+        params._ticks_file))
+    ticks = Ticks().read_ohlc()
+    encoder = CSEncoder().fit(ticks, params._ohlc_tags)
+    cse = encoder.ticks2cse(ticks.iloc[:params._n, ])
+    encoder.save_cse(cse, params._cse_file)
+    # -> CSPlot().plot(ticks.iloc[:n, ], ohlc_names=ohlc_tags)
+else:
+    params.log.info('Reading CSE from file: {}'.format(params._cse_file))
+    encoder = CSEncoder()
+    cse = encoder.read_cse()
 
 #
 # Adjust dataset to fit into NN parameters
 #
-# cse_nn = Csnn().init('./nn_cse/params.yaml')
 cse_bodies = Dataset().adjust(encoder.select_body(cse))
 cse_shifts = Dataset().adjust(encoder.select_movement(cse))
 
 #
 # One hot encoding
 #
-oh_bodies = OHEncoder().fit(encoder.body_dict()).transform(cse_bodies)
-oh_shifts = OHEncoder().fit(encoder.move_dict()).transform(cse_shifts)
+oh_encoder_body = OHEncoder().fit(encoder.body_dict())
+oh_encoder_move = OHEncoder().fit(encoder.move_dict())
+oh_bodies = oh_encoder_body.transform(cse_bodies)
+oh_shifts = oh_encoder_move.transform(cse_shifts)
 body_sets = Dataset().train_test_split(data=oh_bodies)
 move_sets = Dataset().train_test_split(data=oh_shifts)
 
-nn_body = Csnn(body_sets)
+#
 # Load or build a model
-# model = cse_nn.load_model('./nn_cse/networks/model_20180827_100_0.75')
-model_body = nn_body.build_model()
-nn_body.train(model_body)
+#
+nn = []
+data = [move_sets, body_sets]
+for i, model_name in enumerate(params._model_filename):
+    nn.append(Csnn(data[i], model_name))
 
-nn_move = Csnn(move_sets)
-# Load or build a model
-# model = cse_nn.load_model('./nn_cse/networks/model_20180827_100_0.75')
-model_move = nn_move.build_model()
-nn_move.train(model_move)
+if params._train is True:
+    for i in range(len(nn)):
+        nn[i].build_model()
+        nn[i].train()
+        nn[i].save()
+else:
+    for i in range(len(nn)):
+        nn[i].load(params._model_filename[i], summary=False)
 
 #
-# Reverse Encoding to produce ticks from CSE
+# Make batch predictions
 #
-cse_codes = encoder.read_cse(params._cse_file, params._cse_tags)
-rec_ticks = encoder.cse2ticks(cse_codes.iloc[:params._n, ], params._ohlc_tags)
-# -> CSPlot().plot(rec_ticks.iloc[:n, ], ohlc_names=ohlc_tags)
+Predict(body_sets, oh_encoder_body).body(nn[0])
+Predict(move_sets, oh_encoder_move).move(nn[1])

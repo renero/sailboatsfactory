@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from cs_encoder.params import Params
 from keras.utils import to_categorical
 
 
@@ -13,7 +14,8 @@ class ValidationError(Exception):
         self.errors = errors
 
 
-class OHEncoder:
+class OHEncoder(Params):
+
     _signed = False
     _states = set()
     _dict = dict()
@@ -22,6 +24,7 @@ class OHEncoder:
     _inv_sign = {1: 'p', -1: 'n'}
 
     def __init__(self, signed=True):
+        super(OHEncoder, self).__init__()
         self._signed = signed
 
     def reset(self):
@@ -46,19 +49,26 @@ class OHEncoder:
           - The object, updated.
         """
         # Check if the array is 1D or 2D, and first element has more than 1 ch
+        self.reset()
         if len(data.shape) == 2:
             if self._signed is True and len(data[0]) > 1:
+                self.log.debug('case 1')
                 [self._states.update([chr[1:] for chr in l]) for l in data]
             else:
+                self.log.debug('case 2')
                 [self._states.update(l) for l in data]
         elif len(data.shape) == 1:
             if self._signed is True and len(data[0]) > 1:
+                self.log.debug('case 3')
                 self._states.update([chr[1:] for chr in data])
             else:
+                self.log.debug('case 4')
                 self._states.update(data)
         else:
             raise ValidationError('1D or 2D array expected.', -1)
         # Build the dict.
+        self.log.debug('Onehot encoding with {} elements'.format(
+            len(self._states)))
         self._dict = {k: v for v, k in enumerate(sorted(list(self._states)))}
         self._inv_dict = {v: k for k, v in self._dict.items()}
         return self
