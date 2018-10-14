@@ -50,21 +50,19 @@ class OHEncoder(Params):
         """
         # Check if the array is 1D or 2D, and first element has more than 1 ch
         self.reset()
-        self.log.info('Onehot states contains {} elements'.format(
-            len(self._states)))
         if len(data.shape) == 2:
             if self._signed is True and len(data[0]) > 1:
-                self.log.info('case 1')
+                self.log.debug('case 1')
                 [self._states.update([chr[1:] for chr in l]) for l in data]
             else:
-                self.log.info('case 2')
+                self.log.debug('case 2')
                 [self._states.update(l) for l in data]
         elif len(data.shape) == 1:
             if self._signed is True and len(data[0]) > 1:
-                self.log.info('case 3')
+                self.log.debug('case 3')
                 self._states.update([chr[1:] for chr in data])
             else:
-                self.log.info('case 4')
+                self.log.debug('case 4')
                 self._states.update(data)
         else:
             raise ValidationError('1D or 2D array expected.', -1)

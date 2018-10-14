@@ -138,11 +138,13 @@ class Csnn(Params):
           - A numpy vector of predictions of shape (1, p) with all elements
             in the vector equal to 0, except the max one, which is -1 or +1
         """
+        self.log.debug('Getting hardmax of: {}'.format(y))
         min = np.argmin(y)
         max = np.argmax(y)
-        pos = max if abs(y[0][max]) > abs(y[0][min]) else min
+        pos = max if abs(y[max]) > abs(y[min]) else min
         y_max = np.zeros(y.shape)
-        y_max[0][pos] = 1.0 if pos == max else -1.0
+        y_max[pos] = 1.0 if pos == max else -1.0
+        self.log.debug('Hardmax position = {}'.format(y_max))
         return y_max
 
     def valid_output_name(self):
@@ -151,7 +153,7 @@ class Csnn(Params):
         Returns The filename if the name is valid and file does not exists,
                 None otherwise.
         """
-        self._filename = '{}_{}_p{}_w{}_e{}_a{:.4f}'.format(
+        self._filename = '{}_{}_{}_w{}_e{}_a{:.4f}'.format(
             self._metadata['name'],
             datetime.now().strftime('%Y%m%d_%H%M'),
             self._metadata['dataset'],
