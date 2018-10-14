@@ -4,9 +4,8 @@ from cs_encoder.ticks import Ticks
 from cs_encoder.cs_nn import Csnn
 from cs_encoder.dataset import Dataset
 from cs_encoder.params import Params
-# from cs_encoder.cs_plot import CSPlot
-
 import matplotlib.pyplot as plt
+
 
 #
 # Read raw data, and encode it.
@@ -45,8 +44,8 @@ move_sets = Dataset().train_test_split(data=oh_shifts)
 # Load or build a model
 #
 nn = []
-data = [body_sets, move_sets]
-for i, model_name in enumerate(['body']):
+data = [move_sets, body_sets]
+for i, model_name in enumerate(['move']): # , 'body']):
     nn.append(Csnn(data[i], model_name))
 
 if params._train is True:
@@ -64,7 +63,7 @@ positive_all = 0
 positive_sign = 0
 positive_shape = 0
 num_predictions = body_sets.X_test.shape[0]
-for j in range(body_sets.X_test.shape[0]):
+for j in range((body_sets.X_test.shape[0])-2):
     y = nn[0].predict(body_sets.X_test[j:j + 1, :, :])
     y_pred = nn[0].hardmax(y)
     cse_predicted = oh_encoder_body.decode(y_pred)[0]
@@ -72,9 +71,26 @@ for j in range(body_sets.X_test.shape[0]):
     positive_all += int(cse_actual == cse_predicted)
     positive_sign += int(cse_actual[0] == cse_predicted[0])
     positive_shape += int(cse_actual[-1] == cse_predicted[-1])
-    print('predicted: {} / actual: {}'.format(cse_actual))
+    # print('predicted: {} / actual: {}'.format(cse_actual))
+
 print('PR (all): {:.3f}\nPR (sign): {:.3f}\nPR (shape): {:.3f}'.format(
     (positive_all / num_predictions),
     (positive_sign / num_predictions),
     (positive_shape / num_predictions)))
-body_sets.y_test[j:j + 1, :].shape
+
+positive_open = 0
+positive_close = 0
+positive_high = 0
+positive_low = 0
+num_predictions = move_sets.X_test.shape[0]
+for j in range((move_sets.X_test.shape[0])-2):
+    y = nn[0].predict(move_sets.X_test[j:j + 1, :, :])
+    y_pred = nn[0].hardmax(y)
+    cse_predicted = oh_encoder_move.decode(y_pred)[0]
+    cse_actual = oh_encoder_move.decode(move_sets.y_test[j:j + 1, :])[0]
+    positive_all += int(cse_actual == cse_predicted)
+    positive_sign += int(cse_actual[0] == cse_predicted[0])
+    positive_shape += int(cse_actual[-1] == cse_predicted[-1])
+
+plt.plot(y[0])
+j=0

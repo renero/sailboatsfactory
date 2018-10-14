@@ -151,11 +151,12 @@ class Csnn(Params):
         Returns The filename if the name is valid and file does not exists,
                 None otherwise.
         """
-        self._filename = '{}_{}_p{}_e{}_a{:.4f}'.format(
+        self._filename = '{}_{}_p{}_w{}_e{}_a{:.4f}'.format(
             self._metadata['name'],
             datetime.now().strftime('%Y%m%d_%H%M'),
             self._metadata['dataset'],
-            self._metadata['epochs'],
+            self._window_size,
+            self._epochs,
             self._metadata['accuracy'][-1])
         base_filepath = join(self._output_dir, self._filename)
         output_filepath = base_filepath

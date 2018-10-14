@@ -80,11 +80,9 @@ class CSEncoder(Params):
         self.encoded_delta_min = 'pA'
         self.encoded_delta_open = 'pA'
 
-    @classmethod
     def body_dict(self):
         return np.array(self._def_prcntg_body_encodings)
 
-    @classmethod
     def move_dict(self):
         return np.array(self._def_prcntg_mvmt_encodings)
 
