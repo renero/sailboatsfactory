@@ -74,6 +74,7 @@ class Csnn(Params):
         # found in the dataset.
         self._window_size = dataset.X_train.shape[1]
         self._num_categories = dataset.X_train.shape[2]
+        self.log.info('NN created with name: {}'.format(name))
 
     def build_model(self, summary=True):
         """

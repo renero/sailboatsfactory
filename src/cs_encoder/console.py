@@ -4,6 +4,7 @@ from cs_encoder.ticks import Ticks
 from cs_encoder.cs_nn import Csnn
 from cs_encoder.dataset import Dataset
 from cs_encoder.params import Params
+from cs_encoder.predict import Predict
 
 #
 # Read raw data, and encode it.
@@ -43,7 +44,7 @@ move_sets = Dataset().train_test_split(data=oh_shifts)
 #
 nn = []
 data = [move_sets, body_sets]
-for i, model_name in enumerate(['move']):  # , 'body']):
+for i, model_name in enumerate(params._model_filename):
     nn.append(Csnn(data[i], model_name))
 
 if params._train is True:
@@ -54,63 +55,9 @@ if params._train is True:
 else:
     for i in range(len(nn)):
         nn[i].load(params._model_filename[i], summary=False)
-#
-# Predict Body
-#
-positive_all = 0
-positive_sign = 0
-positive_shape = 0
-nn_index = 1
-num_testcases = body_sets.X_test.shape[0]
-for j in range((body_sets.X_test.shape[0]) - 2):
-    y = nn[nn_index].predict(body_sets.X_test[j:j + 1, :, :])
-    y_pred = nn[nn_index].hardmax(y[0])
-    cse_predicted = oh_encoder_body.decode(y_pred)[0]
-    cse_actual = oh_encoder_body.decode(body_sets.y_test[j:j + 1, :])[0]
-    positive_all += int(cse_actual == cse_predicted)
-    positive_sign += int(cse_actual[0] == cse_predicted[0])
-    positive_shape += int(cse_actual[-1] == cse_predicted[-1])
-    # print('predicted: {} / actual: {}'.format(cse_actual))
-
-print('Pos.Rate (all/sign/body): {:.3f} / {:.3f} / {:.3f}'.format(
-    (positive_all / num_testcases), (positive_sign / num_testcases),
-    (positive_shape / num_testcases)))
 
 #
-# Predict Move
+# Make batch predictions
 #
-pos_open = 0
-pos_close = 0
-pos_high = 0
-pos_low = 0
-nn_index = 0
-pred_length = len(oh_encoder_move._states)
-num_predictions = int(move_sets.y_test.shape[1] / pred_length)
-j = 0
-
-for j in range((move_sets.X_test.shape[0]) - 2):
-    y = nn[nn_index].predict(move_sets.X_test[j:j + 1, :, :])
-    Y_pred = [
-        nn[nn_index].hardmax(
-            y[0][i * pred_length:(i * pred_length) + pred_length - 1])
-        for i in range(num_predictions)
-    ]
-    move_predicted = [
-        oh_encoder_move.decode(Y_pred[i])[0] for i in range(num_predictions)
-    ]
-    move_actual = [
-        oh_encoder_move.decode(move_sets.y_test[j:j + 1, :])[0]
-        for i in range(num_predictions)
-    ]
-    pos_open += int(move_actual[0] == move_predicted[0])
-    pos_high += int(move_actual[1] == move_predicted[1])
-    pos_low += int(move_actual[2] == move_predicted[2])
-    pos_close += int(move_actual[3] == move_predicted[3])
-
-num_testcases = (move_sets.X_test.shape[0]) - 2
-print('Pos.Rate (O/H/L/C): {:.4f} : {:.4f} : {:.4f} : {:.4f} ~ {:.4f}'.
-      format((pos_open / num_testcases),
-             (pos_high / num_testcases),
-             (pos_low / num_testcases),
-             (pos_close / num_testcases),
-             ((pos_open+pos_high+pos_low+pos_close)/(num_testcases*4))))
+Predict(body_sets, oh_encoder_body).body(nn[0])
+Predict(move_sets, oh_encoder_move).move(nn[1])

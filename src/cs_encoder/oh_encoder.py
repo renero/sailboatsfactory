@@ -67,7 +67,7 @@ class OHEncoder(Params):
         else:
             raise ValidationError('1D or 2D array expected.', -1)
         # Build the dict.
-        self.log.info('Onehot encoding with {} elements'.format(
+        self.log.debug('Onehot encoding with {} elements'.format(
             len(self._states)))
         self._dict = {k: v for v, k in enumerate(sorted(list(self._states)))}
         self._inv_dict = {v: k for k, v in self._dict.items()}
