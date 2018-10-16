@@ -496,7 +496,7 @@ class CSEncoder(Params):
         return pd.DataFrame(bodies, columns=['body'])
 
     @classmethod
-    def select_movement(self, cse):
+    def select_move(self, cse):
         """Returns the body element of an array of encoded candlesticks"""
         ohlc = np.array([[
             cse[i].encoded_delta_open, cse[i].encoded_delta_high,

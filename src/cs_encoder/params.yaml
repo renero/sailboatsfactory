@@ -1,21 +1,21 @@
 # What do I do?
-train: False
+train: True
 
 # data dependencies
 ticks_file: '../data/ibex_1hr_1y.csv'
 encoding: 'colh'
 delimiter: '|'
-cse_file: '../data/ibex_1hr_1y.cse'
+cse_file: '../data/ibex_1hr_3y.cse'
 columns: ['tickopenprice', 'tickmaxprice', 'tickminprice', 'tickcloseprice']
 cse_colnames: ['body', 'open', 'high', 'low', 'close']
 ohlc_tags: ['o', 'h', 'l', 'c']
 cse_tags: ['b', 'o', 'h', 'l', 'c']
-n: 1000
 log_level: 3
-model_filename: ['./body_20181012_0858_pibex_1hr_1y_w3_e100_a0.5119', './move_20181014_1115_pibex_1hr_1y_w3_e100_a0.4207']
+names: ['body', 'move']
+model_filename: { body: './body_20181012_0858_pibex_1hr_1y_w3_e100_a0.5119', move: './move_20181014_1115_pibex_1hr_1y_w3_e100_a0.4207' }
 
 # dataset parameters
-num_categories: 26
+# num_categories: 26
 
 # training parameters
 loss: 'mean_squared_error'
