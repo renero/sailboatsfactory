@@ -156,12 +156,9 @@ class Csnn(Params):
         """
         self._filename = '{}_{}_{}_w{}_e{}_a{:.4f}'.format(
             self._metadata['name'],
-            datetime.now().strftime('%Y%m%d_%H%M'),
-            self._metadata['dataset'],
-            self._window_size,
-            self._epochs,
-            self._metadata['accuracy'][-1])
-        base_filepath = join(self._output_dir, self._filename)
+            datetime.now().strftime('%Y%m%d_%H%M'), self._metadata['dataset'],
+            self._window_size, self._epochs, self._metadata['accuracy'][-1])
+        base_filepath = join(self._models_dir, self._filename)
         output_filepath = base_filepath
         idx = 1
         while Path(output_filepath).is_file() is True:
@@ -172,12 +169,14 @@ class Csnn(Params):
     def load(self, modelname, summary=True):
         """ load json and create model """
         self.log.info('Reading model file: {}'.format(modelname))
-        json_file = open('{}.json'.format(modelname), 'r')
+        json_file = open(
+            join(self._models_dir, '{}.json'.format(modelname)), 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
         # load weights into new model
-        loaded_model.load_weights('{}.h5'.format(modelname))
+        loaded_model.load_weights(
+            join(self._models_dir, '{}.h5'.format(modelname)))
         loaded_model.compile(
             loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
         if summary is True:

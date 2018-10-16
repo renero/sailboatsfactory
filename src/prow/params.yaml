@@ -1,8 +1,11 @@
 # What do I do?
 train: False
 
+# Log level: 0: Silent, 1: Errors only, 2: Warnings too, 3: info, 4: debug
+log_level: 3
+
 # data dependencies
-ticks_file: '../../data/100.csv'
+ticks_file: '../../data/ibex1hr3y.csv'
 encoding: 'colh'
 delimiter: '|'
 cse_file: '../../data/ibex1hr3y.cse'
@@ -10,12 +13,9 @@ columns: ['tickopenprice', 'tickmaxprice', 'tickminprice', 'tickcloseprice']
 cse_colnames: ['body', 'open', 'high', 'low', 'close']
 ohlc_tags: ['o', 'h', 'l', 'c']
 cse_tags: ['b', 'o', 'h', 'l', 'c']
-log_level: 3
 names: ['body', 'move']
+models_dir: '../../networks'
 model_filename: { body: '../../networks/body_20181016_1400_ibex1hr3y_w3_e100_a0.4518', move: './move_20181014_1115_pibex_1hr_1y_w3_e100_a0.4207' }
-
-# dataset parameters
-# num_categories: 26
 
 # training parameters
 loss: 'mean_squared_error'
