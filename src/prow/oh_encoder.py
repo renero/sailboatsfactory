@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from cs_encoder.params import Params
+from params import Params
 from keras.utils import to_categorical
 
 
@@ -67,7 +67,7 @@ class OHEncoder(Params):
         else:
             raise ValidationError('1D or 2D array expected.', -1)
         # Build the dict.
-        self.log.debug('Onehot encoding with {} elements'.format(
+        self.log.info('Onehot encoding with {} elements'.format(
             len(self._states)))
         self._dict = {k: v for v, k in enumerate(sorted(list(self._states)))}
         self._inv_dict = {v: k for k, v in self._dict.items()}
@@ -120,6 +120,7 @@ class OHEncoder(Params):
                 ])
         else:
             raise ValidationError('1D or 2D array expected.', -1)
+        self.log.info('Transformed onehot encoded dataset')
         return pd.DataFrame(transformed.reshape(len(input), -1))
 
     def decode(self, data):

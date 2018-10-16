@@ -1,4 +1,4 @@
-from cs_encoder.params import Params
+from params import Params
 
 
 class Predict(Params):

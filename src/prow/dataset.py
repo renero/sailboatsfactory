@@ -2,7 +2,7 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 
-from cs_encoder.params import Params
+from params import Params
 
 
 class Dataset(Params):
@@ -25,6 +25,7 @@ class Dataset(Params):
             series, test_size=self._test_size, shuffle=False)
         self.X_train, self.y_train = self.reshape(np.array(train))
         self.X_test, self.y_test = self.reshape(np.array(test))
+        self.log.info('Dataset split in train and test')
         return self
 
     def reshape(self, data):
@@ -91,5 +92,6 @@ class Dataset(Params):
         self._num_features = raw.shape[1] if len(raw.shape) > 1 else 1
         self._num_frames = self._num_samples - (
             self._window_size + self._num_predictions) + 1
+        self.log.info('Adjusted dataset size to {}'.format(self._num_samples))
 
         return new_df

@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from cs_encoder.params import Params
+from params import Params
 
 
 class Ticks(Params):

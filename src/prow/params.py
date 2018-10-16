@@ -1,9 +1,9 @@
 import yaml
-from cs_encoder.cs_logger import CSLogger
+from cs_logger import CSLogger
 
 
 class Params(object):
-    def __init__(self, params_filepath='./cs_encoder/params.yaml'):
+    def __init__(self, params_filepath='./params.yaml'):
         """
         Init a class with all the parameters in the default YAML file.
         For each of them, create a new class attribute, with the same name

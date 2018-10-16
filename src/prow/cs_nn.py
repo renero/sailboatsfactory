@@ -8,7 +8,7 @@ from keras.regularizers import l2
 from os.path import join, basename, splitext
 from pathlib import Path
 
-from cs_encoder.params import Params
+from params import Params
 
 
 class ValidationException(Exception):
@@ -103,7 +103,7 @@ class Csnn(Params):
         if summary is True:
             model.summary()
         self._model = model
-        return model
+        return self
 
     def train(self):
         """
@@ -118,7 +118,7 @@ class Csnn(Params):
             verbose=self._verbose,
             validation_split=self._validation_split)
         self._metadata[self._metrics[0]] = self._history.history['acc']
-        return self._history
+        return self
 
     def predict(self, test_set):
         """

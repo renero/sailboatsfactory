@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from cs_encoder.cs_utils import which_string
-from cs_encoder.params import Params
+from cs_utils import which_string
+from params import Params
 
 
 class CSEncoder(Params):
