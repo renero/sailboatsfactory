@@ -10,18 +10,12 @@ from cs_encoder.predict import Predict
 # Read raw data, and encode it.
 #
 params = Params()
-if params._cse_file is not None:
-    params.log.info('Reading and encoding ticksfile: {}'.format(
-        params._ticks_file))
-    ticks = Ticks().read_ohlc()
-    encoder = CSEncoder().fit(ticks, params._ohlc_tags)
-    cse = encoder.ticks2cse(ticks.iloc[:params._n, ])
-    encoder.save_cse(cse, params._cse_file)
-    # -> CSPlot().plot(ticks.iloc[:n, ], ohlc_names=ohlc_tags)
-else:
-    params.log.info('Reading CSE from file: {}'.format(params._cse_file))
-    encoder = CSEncoder()
-    cse = encoder.read_cse()
+params.log.info('Reading and encoding ticksfile: {}'.format(
+    params._ticks_file))
+ticks = Ticks().read_ohlc()
+encoder = CSEncoder().fit(ticks, params._ohlc_tags)
+cse = encoder.ticks2cse(ticks.iloc[:params._n, ])
+encoder.save_cse(cse, params._cse_file)
 
 #
 # Adjust dataset to fit into NN parameters
@@ -43,7 +37,7 @@ move_sets = Dataset().train_test_split(data=oh_shifts)
 # Load or build a model
 #
 nn = []
-data = [move_sets, body_sets]
+data = [body_sets, move_sets]
 for i, model_name in enumerate(params._model_filename):
     nn.append(Csnn(data[i], model_name))
 

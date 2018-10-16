@@ -18,7 +18,7 @@ model_filename: ['./body_20181012_0858_pibex_1hr_1y_w3_e100_a0.5119', './move_20
 num_categories: 26
 
 # training parameters
-loss: 'cosine_proximity'
+loss: 'mean_squared_error'
 optimizer: 'adam'
 metrics: ['accuracy']
 epochs: 100
