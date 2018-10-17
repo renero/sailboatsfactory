@@ -12,7 +12,7 @@ class Ticks(Params):
                   filepath=None,
                   columns=None,
                   ohlc_tags=None,
-                  normalize=True):
+                  do_normalize=True):
         _filepath = self._ticks_file if filepath is None else filepath
         _columns = self._columns if columns is None else columns
         _ohlc_tags = self._ohlc_tags if ohlc_tags is None else ohlc_tags
@@ -27,9 +27,11 @@ class Ticks(Params):
         def normalize(x):
             return (x - min_value) / (max_value - min_value)
 
-        df = df.applymap(np.vectorize(normalize))
+        if do_normalize is True:
+            df = df.applymap(np.vectorize(normalize))
+        self.log.info('Read and encoded ticksfile: {}'.format(self._ticks_file))
         return df
 
-    def new_ohlc(values, columns):
+    def new_ohlc(self, values, columns):
         df = pd.Series([values], columns=columns)
         return df

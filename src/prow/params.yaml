@@ -1,11 +1,11 @@
 # What do I do?
-train: False
+train: True
 
 # Log level: 0: Silent, 1: Errors only, 2: Warnings too, 3: info, 4: debug
 log_level: 3
 
 # data dependencies
-ticks_file: '../../data/ibex1hr3y.csv'
+ticks_file: '../../data/ibex1hr1y.csv'
 encoding: 'colh'
 delimiter: '|'
 cse_file: '../../data/ibex1hr3y.cse'
@@ -15,7 +15,10 @@ ohlc_tags: ['o', 'h', 'l', 'c']
 cse_tags: ['b', 'o', 'h', 'l', 'c']
 names: ['body', 'move']
 models_dir: '../../networks'
-model_filename: { body: '../../networks/body_20181016_1400_ibex1hr3y_w3_e100_a0.4518', move: './move_20181014_1115_pibex_1hr_1y_w3_e100_a0.4207' }
+model_filename: {
+  body: 'body_20181016_1400_ibex1hr3y_w3_e100_a0.4518',
+  move: 'move_20181014_1115_pibex_1hr_1y_w3_e100_a0.4207'
+}
 
 # training parameters
 loss: 'mean_squared_error'
@@ -23,7 +26,7 @@ optimizer: 'adam'
 metrics: ['accuracy']
 epochs: 100
 batch_size: 10
-window_size: 3
+window_size: 5
 validation_split: 0.1
 test_size: 0.1
 verbose: 1
@@ -33,7 +36,7 @@ num_predictions: 1
 l1units: 256
 l2units: 256
 activation: 'tanh'
-dropout: 0.2
+dropout: 0.1
 
 # training parameters
 epocs: 100
