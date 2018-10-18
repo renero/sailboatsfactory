@@ -1,5 +1,5 @@
 # What do I do?
-train: True
+train: False
 
 # Log level: 0: Silent, 1: Errors only, 2: Warnings too, 3: info, 4: debug
 log_level: 3
@@ -16,8 +16,8 @@ cse_tags: ['b', 'o', 'h', 'l', 'c']
 names: ['body', 'move']
 models_dir: '../../networks'
 model_filename: {
-  body: 'body_20181016_1400_ibex1hr3y_w3_e100_a0.4518',
-  move: 'move_20181014_1115_pibex_1hr_1y_w3_e100_a0.4207'
+  body: 'body_20181017_1323_ibex1hr1y_w7_e100_a0.5103',
+  move: 'move_20181017_1335_ibex1hr1y_w7_e100_a0.4215'
 }
 
 # training parameters
@@ -26,7 +26,7 @@ optimizer: 'adam'
 metrics: ['accuracy']
 epochs: 100
 batch_size: 10
-window_size: 5
+window_size: 7
 validation_split: 0.1
 test_size: 0.1
 verbose: 1

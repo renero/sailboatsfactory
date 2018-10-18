@@ -25,7 +25,8 @@ class Dataset(Params):
             series, test_size=self._test_size, shuffle=False)
         self.X_train, self.y_train = self.reshape(np.array(train))
         self.X_test, self.y_test = self.reshape(np.array(test))
-        self.log.info('Dataset split in train and test')
+        self.log.info('Dataset split in train {} and test {}'.format(
+            self.X_train.shape[0], self.X_test.shape[0]))
         return self
 
     def reshape(self, data):
@@ -92,6 +93,7 @@ class Dataset(Params):
         self._num_features = raw.shape[1] if len(raw.shape) > 1 else 1
         self._num_frames = self._num_samples - (
             self._window_size + self._num_predictions) + 1
-        self.log.info('Adjusted dataset size to {}'.format(self._num_samples))
+        self.log.info('Adjusted dataset size to {} from {}'.format(
+            new_df.shape[0], raw.shape[0]))
 
         return new_df
