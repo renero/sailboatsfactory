@@ -84,7 +84,7 @@ class OHEncoder(Params):
         self._inv_dict = {v: k for k, v in self._dict.items()}
         return self
 
-    def transform(self, input):
+    def encode(self, input):
         """ Convert a DataFrame of dimension (n x m x p) into an array of
         ((nxm) x p), in one hot encoding, with sign.
 

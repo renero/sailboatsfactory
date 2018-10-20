@@ -3,22 +3,25 @@ from params import Params
 
 class Predict(Params):
 
-    def __init__(self, datasets, oh_encoder):
+    def __init__(self, X_test, y_test=None, oh_encoder=None):
         super(Predict, self).__init__()
-        self._dataset = datasets
-        self._oh_encoder = oh_encoder
+        self._X_test = X_test
+        if y_test is not None:
+            self._y_test = y_test
+        if oh_encoder is not None:
+            self._oh_encoder = oh_encoder
 
-    def body(self, nn):
+    def body_batch(self, nn):
         positive_all = 0
         positive_sign = 0
         positive_shape = 0
-        num_testcases = self._dataset.X_test.shape[0]
-        for j in range((self._dataset.X_test.shape[0]) - 2):
-            y = nn.predict(self._dataset.X_test[j:j + 1, :, :])
+        num_testcases = self._X_test.shape[0]
+        for j in range((self._X_test.shape[0]) - 2):
+            y = nn.predict(self._X_test[j:j + 1, :, :])
             y_pred = nn.hardmax(y[0])
             cse_predicted = self._oh_encoder.decode(y_pred)[0]
             cse_actual = self._oh_encoder.decode(
-                self._dataset.y_test[j:j + 1, :])[0]
+                self._y_test[j:j + 1, :])[0]
             positive_all += int(cse_actual == cse_predicted)
             positive_sign += int(cse_actual[0] == cse_predicted[0])
             positive_shape += int(cse_actual[-1] == cse_predicted[-1])
@@ -32,19 +35,23 @@ class Predict(Params):
                 (positive_sign / num_testcases),
                 (positive_shape / num_testcases))
 
-    def move(self, nn):
+    def move_batch(self, nn):
         pos_open = 0
         pos_close = 0
         pos_high = 0
         pos_low = 0
         pred_length = len(self._oh_encoder._states)
-        num_predictions = int(self._dataset.y_test.shape[1] / pred_length)
+        num_predictions = int(self._y_test.shape[1] / pred_length)
 
-        for j in range((self._dataset.X_test.shape[0]) - 2):
-            y = nn.predict(self._dataset.X_test[j:j + 1, :, :])
+        for j in range((self._X_test.shape[0]) - 2):
+            y = nn.predict(self._X_test[j:j + 1, :, :])
+            #
+            # TODO: Check if:
+            #   y[0][i * pred_length:(i * pred_length) + pred_length - 1])
+            #
             Y_pred = [
                 nn.hardmax(
-                    y[0][i * pred_length:(i * pred_length) + pred_length - 1])
+                    y[0][i * pred_length:(i * pred_length) + pred_length])
                 for i in range(num_predictions)
             ]
             move_predicted = [
@@ -53,7 +60,7 @@ class Predict(Params):
             ]
             move_actual = [
                 self._oh_encoder.decode(
-                    self._dataset.y_test[j:j + 1, :])[0]
+                    self._y_test[j:j + 1, :])[0]
                 for i in range(num_predictions)
             ]
             pos_open += int(move_actual[0] == move_predicted[0])
@@ -61,7 +68,7 @@ class Predict(Params):
             pos_low += int(move_actual[2] == move_predicted[2])
             pos_close += int(move_actual[3] == move_predicted[3])
 
-        num_testcases = (self._dataset.X_test.shape[0]) - 2
+        num_testcases = (self._X_test.shape[0]) - 2
         print('Pos.Rate (O/H/L/C): {:.4f} : {:.4f} : {:.4f} : {:.4f} ~ {:.4f}'.
               format((pos_open / num_testcases), (pos_high / num_testcases),
                      (pos_low / num_testcases), (pos_close / num_testcases),

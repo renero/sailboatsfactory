@@ -350,17 +350,19 @@ class CSEncoder(Params):
         return value
 
     def decode_cse(self, this_cse, prev_cse):
-        """From a CSE and its previous CSE in the time series, returns the
-        reconstructed tick (OHLC)."""
+        """
+        From a CSE numpy array and its previous CSE numpy array in the
+        time series, returns the reconstructed tick (OHLC).
+        """
         mm = prev_cse.hl_interval_width
         mvmt_sign = [
             +1 if this_cse[column][0] == 'p' else -1
-            for column in list(['o', 'h', 'l', 'c'])
+            for column in range(len(self._ohlc_tags))
         ]
         self.log.debug('Sign of movement: {}|{}|{}|{}'.format(
             mvmt_sign[0], mvmt_sign[1], mvmt_sign[2], mvmt_sign[3]))
         mvmt_shift = [(self.decode_movement_code(this_cse[column]) * mm)
-                      for column in list(['o', 'h', 'l', 'c'])]
+                      for column in range(len(self._ohlc_tags))]
         self.log.debug(
             'Amount of movement: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
                 mvmt_shift[0], mvmt_shift[1], mvmt_shift[2], mvmt_shift[3]))
@@ -476,6 +478,29 @@ class CSEncoder(Params):
             cse[index].encode_body()
             cse[index].encode_movement(cse[index - 1])
         return cse
+
+    def encode(self, ticks):
+        """Encodes a dataframe of Ticks, returning a dataframe of CSE values.
+        """
+        cse = []
+        df = pd.DataFrame(index=range(ticks.shape[0]), columns=self._cse_tags)
+        for index in range(0, ticks.shape[0]):
+            cse.append(
+                CSEncoder(
+                    np.array(ticks.iloc[index])))
+            self.log.debug(
+                'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
+                    cse[index].open, cse[index].high, cse[index].low,
+                    cse[index].close))
+            cse[index].encode_body()
+            cse[index].encode_movement(cse[index - 1])
+            df.loc[index] = pd.Series({
+                self._cse_tags[0]: cse[index].encoded_body,
+                self._cse_tags[1]: cse[index].encoded_delta_open,
+                self._cse_tags[2]: cse[index].encoded_delta_high,
+                self._cse_tags[3]: cse[index].encoded_delta_low,
+                self._cse_tags[4]: cse[index].encoded_delta_close})
+        return df
 
     def info(self):
         v = vars(self)
