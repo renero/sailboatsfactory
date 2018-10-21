@@ -43,10 +43,7 @@ def plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions,
         plt.axvline(x=vl, linestyle=':', color='red')
 
 
-def debug_predict(ticks, actual, cs_encoder, oh_encoder, nn, params):
-
-    # CSPlot.plot(pd.concat((tick, actual), axis=0), ohlc_names=params._ohlc_tags)
-
+def predict_next_close(ticks, cs_encoder, oh_encoder, nn, params):
     # encode the tick in CSE and OH. reshape it to the expected LSTM format.
     cs_tick = cs_encoder.ticks2cse(ticks)
     cs_tick_body_oh = oh_encoder['body'].encode(
@@ -84,10 +81,9 @@ def debug_predict(ticks, actual, cs_encoder, oh_encoder, nn, params):
 
     # Convert the prediction to a real tick
     pred = cs_encoder.cse2ticks(prediction_df, cs_tick[-1])
+    return pred['c'].values[0]
 
     # Plot everything. The prediction is the last one. The actual is the
     # second last.
-    output_df = ticks.append(actual, ignore_index=True)
-    output_df = output_df.append(pred, ignore_index=True)
-
-    return abs(pred['c'].values[0] - actual['c'].values[0])
+    # output_df = ticks.append(actual, ignore_index=True)
+    # output_df = output_df.append(pred, ignore_index=True)

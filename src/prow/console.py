@@ -5,7 +5,7 @@ from cs_nn import Csnn
 from dataset import Dataset
 from params import Params
 from predict import Predict
-from cs_api import debug_predict
+from cs_api import predict_next_close
 
 import matplotlib.pyplot as plt
 from cs_plot import CSPlot
@@ -41,10 +41,11 @@ for name in params._names:
     else:
         nn[name].load(params._model_filename[name], summary=False)
 
-    prediction[name] = Predict(dataset[name].X_test, dataset[name].y_test,
-                               oh_encoder[name])
-    call_predict = getattr(prediction[name], '{}_batch'.format(name))
-    call_predict(nn[name])
+    if params._predict is True:
+        prediction[name] = Predict(dataset[name].X_test, dataset[name].y_test,
+                                   oh_encoder[name])
+        call_predict = getattr(prediction[name], '{}_batch'.format(name))
+        call_predict(nn[name])
 
 # --
 
@@ -54,15 +55,18 @@ for i in range(100):
     start = 2000 + i
     end = start + params._window_size
     tick = ticks.iloc[start:end]
-    actual = ticks.iloc[end:end + 1]
-    errors.append(
-        debug_predict(tick, actual, cs_encoder, oh_encoder, nn, params))
+    real_close = ticks.iloc[end:end + 1]['c'].values[0]
+    next_close = predict_next_close(tick, cs_encoder, oh_encoder, nn, params)
+    errors.append(abs(next_close - real_close))
 
 plt.plot(errors)
 med = np.median(errors)
 std = np.std(errors)
 plt.axhline(med, linestyle=':', color='red')
 plt.axhline(med+std, linestyle=':', color='green')
+plt.show()
+plt.hist(errors, color='blue', edgecolor='black', bins=int(100/2))
+plt.show()
 
 #
 # EOF
