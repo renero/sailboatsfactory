@@ -385,7 +385,7 @@ class CSEncoder(Params):
                 reconstructed_tick[2], reconstructed_tick[3]))
         return reconstructed_tick
 
-    def cse2ticks(self, cse_codes, col_names=None):
+    def cse2ticks(self, cse_codes, first_cse, col_names=None):
         """Reconstruct CSE codes read from a CSE file into ticks
 
         Arguments
@@ -399,17 +399,12 @@ class CSEncoder(Params):
         assert self._fitted, "The encoder has not been fit with data yet!"
         if col_names is None:
             col_names = self._ohlc_tags
-        cse_zero = self.build_new(
-            np.array([
-                self._cse_zero_open, self._cse_zero_high, self._cse_zero_low,
-                self._cse_zero_close
-            ]))
-        cse_decoded = [cse_zero]
+        cse_decoded = [first_cse]
         self.log.debug('Zero CS created: {:.2f}|{:.2f}|{:.2f}|{:.2f}'.format(
             self._cse_zero_open, self._cse_zero_high, self._cse_zero_low,
             self._cse_zero_close))
         rec_ticks = [[
-            cse_zero.open, cse_zero.high, cse_zero.low, cse_zero.close
+            first_cse.open, first_cse.high, first_cse.low, first_cse.close
         ]]
         for i in range(1, len(cse_codes)):
             this_cse = cse_codes.loc[cse_codes.index[i]]
