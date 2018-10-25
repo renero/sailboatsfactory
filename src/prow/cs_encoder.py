@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
+from oh_encoder import OHEncoder
 from cs_utils import which_string
 from params import Params
 
@@ -17,6 +18,8 @@ class CSEncoder(Params):
     _cse_zero_low = 0.0
     _cse_zero_close = 0.0
     _fitted = False
+
+    onehot = {}
 
     min_relative_size = 0.02
     shadow_symmetry_diff_threshold = 0.1
@@ -90,13 +93,21 @@ class CSEncoder(Params):
     def build_new(cls, values):
         return cls(values)
 
-    # @classmethod
-    def fit(self, ticks, col_names):
+    def fit(self, ticks):
+        col_names = self._ohlc_tags
         self._cse_zero_open = ticks.loc[ticks.index[0], col_names[0]]
         self._cse_zero_high = ticks.loc[ticks.index[0], col_names[1]]
         self._cse_zero_low = ticks.loc[ticks.index[0], col_names[2]]
         self._cse_zero_close = ticks.loc[ticks.index[0], col_names[3]]
         self._fitted = True
+
+        # Create the OneHot encoders associated to each part of the data
+        # which are the moment are 'body' and 'move'. Those names are extracted
+        # from the parameters file.
+        for name in self._names:
+            call_dict = getattr(self, '{}_dict'.format(name))
+            self.onehot[name] = OHEncoder().fit(call_dict())
+
         return self
 
     @staticmethod

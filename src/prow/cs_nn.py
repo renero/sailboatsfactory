@@ -58,7 +58,7 @@ class Csnn(Params):
     X_test = None
     y_test = None
 
-    def __init__(self, dataset, name):
+    def __init__(self, name):
         """
         Init the class with the number of categories used to encode candles
         """
@@ -66,6 +66,14 @@ class Csnn(Params):
         self._metadata['dataset'] = splitext(basename(self._ticks_file))[0]
         self._metadata['epochs'] = self._epochs
         self._metadata['name'] = name
+        self.log.info('NN created with name: {}'.format(name))
+
+    def build_model(self, dataset, summary=True):
+        """
+        Builds the model according to the parameters specified for
+        dropout, num of categories in the output, window size,
+        """
+        # Save in the object the pointers to the datasets
         self.X_train = dataset.X_train
         self.X_test = dataset.X_test
         self.y_train = dataset.y_train
@@ -74,13 +82,8 @@ class Csnn(Params):
         # found in the dataset.
         self._window_size = dataset.X_train.shape[1]
         self._num_categories = dataset.X_train.shape[2]
-        self.log.info('NN created with name: {}'.format(name))
 
-    def build_model(self, summary=True):
-        """
-        Builds the model according to the parameters specified for
-        dropout, num of categories in the output, window size,
-        """
+        # Build the LSTM
         model = Sequential()
         model.add(
             LSTM(
@@ -97,7 +100,6 @@ class Csnn(Params):
                 activity_regularizer=l2(0.0000001)))
         model.add(Dropout(self._dropout))
         model.add(Dense(self._num_categories, activation=self._activation))
-        # model.add(Activation("tanh"))
         model.compile(
             loss=self._loss, optimizer=self._optimizer, metrics=self._metrics)
         if summary is True:
@@ -166,17 +168,17 @@ class Csnn(Params):
             idx += 1
         return output_filepath
 
-    def load(self, modelname, summary=True):
+    def load(self, model_name, summary=True):
         """ load json and create model """
-        self.log.info('Reading model file: {}'.format(modelname))
+        self.log.info('Reading model file: {}'.format(model_name))
         json_file = open(
-            join(self._models_dir, '{}.json'.format(modelname)), 'r')
+            join(self._models_dir, '{}.json'.format(model_name)), 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
         # load weights into new model
         loaded_model.load_weights(
-            join(self._models_dir, '{}.h5'.format(modelname)))
+            join(self._models_dir, '{}.h5'.format(model_name)))
         loaded_model.compile(
             loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
         if summary is True:

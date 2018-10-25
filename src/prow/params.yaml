@@ -3,7 +3,7 @@ train: False
 predict: False
 
 # Log level: 0: Silent, 1: Errors only, 2: Warnings too, 3: info, 4: debug
-log_level: 2
+log_level: 3
 
 # data dependencies
 ticks_file: '../../data/ibex1hr1y.csv'
@@ -14,12 +14,21 @@ columns: ['tickopenprice', 'tickmaxprice', 'tickminprice', 'tickcloseprice']
 cse_colnames: ['body', 'open', 'high', 'low', 'close']
 ohlc_tags: ['o', 'h', 'l', 'c']
 cse_tags: ['b', 'o', 'h', 'l', 'c']
-names: ['body', 'move']
+
+# Files, Networks, Names...
 models_dir: '../../networks'
+names: ['body', 'move']
 model_filename: {
   body: 'body_20181017_1323_ibex1hr1y_w7_e100_a0.5103',
   move: 'move_20181017_1335_ibex1hr1y_w7_e100_a0.4215'
 }
+model_names:
+  1yw7:
+    - body: body_20181017_1335_ibex1hr1y_w7_e100_a0.4215
+    - move: move_20181017_1335_ibex1hr1y_w7_e100_a0.4215
+  3yw3:
+    - body: body_20181016_1547_ibex1hr3y_w3_e100_a0.4297
+    - move: move_20181016_1547_ibex1hr3y_w3_e100_a0.4297
 
 # training parameters
 loss: 'mean_squared_error'
@@ -38,9 +47,3 @@ l1units: 256
 l2units: 256
 activation: 'tanh'
 dropout: 0.1
-
-# training parameters
-epocs: 100
-batch_size: 10
-validation_split: 0.1
-verbose: 1
