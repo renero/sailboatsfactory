@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
+import pickle
 from pathlib import Path
+from os.path import basename, join, splitext
+from datetime import datetime
 
 from oh_encoder import OHEncoder
 from cs_utils import which_string
@@ -62,6 +65,9 @@ class CSEncoder(Params):
         self.upper_shadow_percentile = self.lower_shadow_percentile = 0.0
         self.oc_interval_width = self.body_relative_size = 0.0
         self.shadows_relative_diff = 0.0
+
+        # Save the origin of data here.
+        self._dataset = splitext(basename(self._ticks_file))[0]
 
         # Assign the proper values to them
         if values is not None:
@@ -398,14 +404,16 @@ class CSEncoder(Params):
 
     def cse2ticks(self, cse_codes, first_cse, col_names=None):
         """Reconstruct CSE codes read from a CSE file into ticks
-
         Arguments
           - cse_codes: DataFrame with columns 'b', 'o', 'h', 'l', 'c',
             representing the body of the candlestick, the open, high, low and
             close encoded values as two-letter strings.
-
         Returns:
           - A DataFrame with the open, high, low and close values decoded.
+          :param cse_codes: the list of CSEs to convert back to Ticks
+          :param first_cse: the first CSE to use as reference
+          :param col_names: the names of column headers to use with ticks
+          :return: the ticks as a dataframe.
         """
         assert self._fitted, "The encoder has not been fit with data yet!"
         if col_names is None:
@@ -434,6 +442,23 @@ class CSEncoder(Params):
         result.columns = col_names
         return result
 
+    def ticks2cse(self, ticks):
+        """
+        Encodes a dataframe of Ticks, returning an array of CSE objects.
+        """
+        cse = []
+        for index in range(0, ticks.shape[0]):
+            cse.append(
+                CSEncoder(
+                    np.array(ticks.iloc[index])))
+            self.log.debug(
+                'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
+                    cse[index].open, cse[index].high, cse[index].low,
+                    cse[index].close))
+            cse[index].encode_body()
+            cse[index].encode_movement(cse[index - 1])
+        return cse
+
     def read_cse(self, filename=None, col_names=None):
         if filename is None:
             df = pd.read_csv(self._cse_file, sep=',')
@@ -442,9 +467,32 @@ class CSEncoder(Params):
         df.columns = col_names if col_names is not None else self._cse_colnames
         return df
 
-    def save_cse(self, cse, filename):
-        """Saves a list of CSE objects to the filename specifed.
+    def save(self):
+        """
+        Saves the CS Encoder object into a pickle dump.
+        :return: The objects itself
+        """
+        with open(self.valid_output_name(), 'wb') as f:
+            # Pickle the object dictionary using the highest protocol available
+            pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
+        return self
 
+    def load(self, pickle_file_path=None):
+        """
+        Loads the CS Encoder object from a pickle dump.
+        :return: The objects itself
+        """
+        if pickle_file_path is None:
+            path = self._pickle_filename
+        else:
+            path = pickle_file_path
+        with open(path, 'rb') as f:
+            self.__dict__.update(pickle.load(f).__dict__)
+        return self
+
+    def save_cse(self, cse, filename):
+        """
+        Saves a list of CSE objects to the filename specifed.
         Arguments:
             - cse(list(CSEEncoder)): list of CSE objects
             - filename: the path to the file to be written as CSV
@@ -470,23 +518,9 @@ class CSEncoder(Params):
             })
         df.to_csv(filename, sep=',', index=False)
 
-    def ticks2cse(self, ticks):
-        """Encodes a dataframe of Ticks, returning an array of CSE objects."""
-        cse = []
-        for index in range(0, ticks.shape[0]):
-            cse.append(
-                CSEncoder(
-                    np.array(ticks.iloc[index])))
-            self.log.debug(
-                'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
-                    cse[index].open, cse[index].high, cse[index].low,
-                    cse[index].close))
-            cse[index].encode_body()
-            cse[index].encode_movement(cse[index - 1])
-        return cse
-
     def encode(self, ticks):
-        """Encodes a dataframe of Ticks, returning a dataframe of CSE values.
+        """
+        Encodes a dataframe of Ticks, returning a dataframe of CSE values.
         """
         cse = []
         df = pd.DataFrame(index=range(ticks.shape[0]), columns=self._cse_tags)
@@ -519,6 +553,24 @@ class CSEncoder(Params):
     def values(self):
         print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(
             self.open, self.high, self.low, self.close))
+
+    def valid_output_name(self):
+        """
+        Builds a valid name with the encoder metadata the date.
+        Returns The filename if the name is valid and file does not exists,
+                None otherwise.
+        """
+        self._filename = 'encoder_{}_{}_w{}'.format(
+            datetime.now().strftime('%Y%m%d_%H%M'),
+            self._dataset,
+            self._window_size)
+        base_filepath = join(self._models_dir, self._filename)
+        output_filepath = base_filepath
+        idx = 1
+        while Path(output_filepath).is_file() is True:
+            output_filepath = '{}_{:d}'.format(base_filepath + idx)
+            idx += 1
+        return output_filepath
 
     @classmethod
     def select_body(self, cse):

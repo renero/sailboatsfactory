@@ -158,8 +158,11 @@ class Csnn(Params):
         """
         self._filename = '{}_{}_{}_w{}_e{}_a{:.4f}'.format(
             self._metadata['name'],
-            datetime.now().strftime('%Y%m%d_%H%M'), self._metadata['dataset'],
-            self._window_size, self._epochs, self._metadata['accuracy'][-1])
+            datetime.now().strftime('%Y%m%d_%H%M'),
+            self._metadata['dataset'],
+            self._window_size,
+            self._epochs,
+            self._metadata['accuracy'][-1])
         base_filepath = join(self._models_dir, self._filename)
         output_filepath = base_filepath
         idx = 1
@@ -168,7 +171,7 @@ class Csnn(Params):
             idx += 1
         return output_filepath
 
-    def load(self, model_name, summary=True):
+    def load(self, model_name, summary=False):
         """ load json and create model """
         self.log.info('Reading model file: {}'.format(model_name))
         json_file = open(

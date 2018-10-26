@@ -6,7 +6,7 @@ predict: False
 log_level: 3
 
 # data dependencies
-ticks_file: '../../data/ibex1hr1y.csv'
+ticks_file: '../../data/ibex1hr3y.csv'
 encoding: 'colh'
 delimiter: '|'
 cse_file: '../../data/ibex1hr3y.cse'
@@ -18,17 +18,21 @@ cse_tags: ['b', 'o', 'h', 'l', 'c']
 # Files, Networks, Names...
 models_dir: '../../networks'
 names: ['body', 'move']
-model_filename: {
-  body: 'body_20181017_1323_ibex1hr1y_w7_e100_a0.5103',
-  move: 'move_20181017_1335_ibex1hr1y_w7_e100_a0.4215'
-}
+
+#model_filename: {
+#  body: 'body_20181017_1323_ibex1hr1y_w7_e100_a0.5103',
+#  move: 'move_20181017_1335_ibex1hr1y_w7_e100_a0.4215'
+#}
+
 model_names:
   1yw7:
-    - body: body_20181017_1335_ibex1hr1y_w7_e100_a0.4215
-    - move: move_20181017_1335_ibex1hr1y_w7_e100_a0.4215
+    body: body_20181017_1323_ibex1hr1y_w7_e100_a0.5103
+    move: move_20181017_1335_ibex1hr1y_w7_e100_a0.4215
+    encoder: encoder_20181017_1340_ibex1hr1y_w7
   3yw3:
-    - body: body_20181016_1547_ibex1hr3y_w3_e100_a0.4297
-    - move: move_20181016_1547_ibex1hr3y_w3_e100_a0.4297
+    body: body_20181016_1530_ibex1hr3y_w3_e100_a0.4558
+    move: move_20181016_1547_ibex1hr3y_w3_e100_a0.4297
+    encoder: encoder_20181016_1550_ibex1h3y_w3
 
 # training parameters
 loss: 'mean_squared_error'
@@ -36,7 +40,7 @@ optimizer: 'adam'
 metrics: ['accuracy']
 epochs: 100
 batch_size: 10
-window_size: 7
+window_size: 3
 validation_split: 0.1
 test_size: 0.1
 verbose: 1

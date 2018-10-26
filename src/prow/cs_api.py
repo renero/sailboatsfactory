@@ -83,13 +83,20 @@ def prepare_nn(dataset, params):
         file.
     """
 
-    nn = {}
-    for name in params._names:
-        nn[name] = Csnn(name)
-        if params._train is True:
-            nn[name].build_model(dataset[name]).train().save()
-        else:
-            nn[name].load(params._model_filename[name], summary=False)
+    if params._train is True:
+        nn = {}
+        for subtype in params._names:
+            nn[subtype] = Csnn(subtype)
+            nn[subtype].build_model(
+                dataset[subtype]).train().save()
+    else:
+        nn = {}
+        for name in params._model_names.keys():
+            nn[name] = {}
+            for subtype in params._names:
+                nn[name][subtype] = Csnn(subtype)
+                nn[name][subtype].load(
+                    params._model_names[name][subtype])
     return nn
 
 
