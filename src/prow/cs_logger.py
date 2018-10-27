@@ -36,7 +36,7 @@ class CSLogger:
             return
         print('DEBUG: {}'.format(msg))
 
-    def info(self, msg):
+    def highlight(self, msg):
         if self._level < self._INFO:
             return
         now = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
@@ -44,6 +44,12 @@ class CSLogger:
             now,
             caller_name(1),
             self.INFOGREY, msg, self.ENDC))
+
+    def info(self, msg):
+        if self._level < self._INFO:
+            return
+        now = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
+        print('{} - INFO - {:<20} - {}'.format(now, caller_name(1), msg))
 
     def warn(self, msg):
         if self._level < self._WARN:

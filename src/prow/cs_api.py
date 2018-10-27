@@ -86,19 +86,18 @@ def train_nn(dataset, subtypes):
     return nn
 
 
-def load_nn(name, model_name, subtypes):
+def load_nn(model_names, subtypes):
     """
     """
     nn = {}
-    # for name in model_names.keys():
-    #     nn[name] = {}
-    #     for subtype in subtypes:
-    #         nn[name][subtype] = Csnn(name, subtype)
-    #         nn[name][subtype].load(model_names[name][subtype])
-    for subtype in subtypes:
-        nn[subtype] = Csnn(name, subtype)
-        nn[subtype].load(model_name[subtype])
-
+    for name in model_names.keys():
+        nn[name] = {}
+        for subtype in subtypes:
+            nn[name][subtype] = Csnn(name, subtype)
+            nn[name][subtype].load(model_names[name][subtype])
+    # for subtype in subtypes:
+    #     nn[subtype] = Csnn(name, subtype)
+    #     nn[subtype].load(model_name[subtype])
     return nn
 
 

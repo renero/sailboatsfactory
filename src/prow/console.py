@@ -14,14 +14,12 @@ if params.do_train is True:
     nn = train_nn(dataset, params.subtypes)
 else:
     tick_group = random_tick_group(ticks, params.max_tick_series_length)
-    # nn = load_nn(params.model_names, params.subtypes)
-    nn = {}
+    nn = load_nn(params.model_names, params.subtypes)
     for name in params.model_names:
         params.log.info(name)
-        nn[name] = load_nn(name, params.model_names[name], params.subtypes)
         nn_encoder = CSEncoder().load(params.model_names[name]['encoder'])
         next_close = predict_close(tick_group, nn_encoder, nn[name], params)
-        params.log.info('Close pred.{}: {}'.format(name, next_close))
+        params.log.highlight('Close pred.{}: {}'.format(name, next_close))
 #
 # EOF
 #
