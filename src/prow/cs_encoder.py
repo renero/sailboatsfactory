@@ -129,8 +129,9 @@ class CSEncoder(Params):
         # Create the OneHot encoders associated to each part of the data
         # which are the moment are 'body' and 'move'. Those names are extracted
         # from the parameters file.
-        self.log.info('Adding OneHot encoders for names {}'.format(self._names))
-        for name in self._names:
+        self.log.info(
+            'Adding OneHot encoders for names {}'.format(self._subtypes))
+        for name in self._subtypes:
             call_dict = getattr(self, '{}_dict'.format(name))
             self.onehot[name] = OHEncoder().fit(call_dict())
 
