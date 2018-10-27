@@ -21,3 +21,19 @@ class Params(object):
 
         # Start the logger
         self.log = CSLogger(self._log_level)
+
+    @property
+    def do_train(self):
+        return self._train is True
+
+    @property
+    def model_names(self):
+        return self._model_names
+
+    @property
+    def subtypes(self):
+        return self._subtypes
+
+    @property
+    def max_tick_series_length(self):
+        return self._max_tick_series_length

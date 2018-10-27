@@ -6,7 +6,7 @@ predict: False
 log_level: 3
 
 # data dependencies
-ticks_file: '../../data/ibex1hr3y.csv'
+ticks_file: '../../data/100.csv'
 encoding: 'colh'
 delimiter: '|'
 cse_file: '../../data/ibex1hr3y.cse'
@@ -15,15 +15,12 @@ cse_colnames: ['body', 'open', 'high', 'low', 'close']
 ohlc_tags: ['o', 'h', 'l', 'c']
 cse_tags: ['b', 'o', 'h', 'l', 'c']
 
+# The max length of ticks to be received vi API.
+max_tick_series_length: 10
+
 # Files, Networks, Names...
 models_dir: '../../networks'
-names: ['body', 'move']
-
-#model_filename: {
-#  body: 'body_20181017_1323_ibex1hr1y_w7_e100_a0.5103',
-#  move: 'move_20181017_1335_ibex1hr1y_w7_e100_a0.4215'
-#}
-
+subtypes: ['body', 'move']
 model_names:
   1yw7:
     body: body_20181017_1323_ibex1hr1y_w7_e100_a0.5103

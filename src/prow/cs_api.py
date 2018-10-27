@@ -48,7 +48,7 @@ def plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions,
         plt.axvline(x=vl, linestyle=':', color='red')
 
 
-def prepare_datasets(encoder, cse, params):
+def prepare_datasets(encoder, cse, subtypes):
     """
     Prepare the training and test datasets from an list of existing CSE, for
     each of the model names considered (body and move).
@@ -62,45 +62,44 @@ def prepare_datasets(encoder, cse, params):
     cse_data = {}
     oh_data = {}
     dataset = {}
-    for name in params._names:
-        call_select = getattr(encoder, 'select_{}'.format(name))
-        cse_data[name] = Dataset().adjust(call_select(cse))
-        oh_data[name] = encoder.onehot[name].encode(cse_data[name])
-        dataset[name] = Dataset().train_test_split(oh_data[name])
+    for subtype in subtypes:
+        call_select = getattr(encoder, 'select_{}'.format(subtype))
+        cse_data[subtype] = Dataset().adjust(call_select(cse))
+        oh_data[subtype] = encoder.onehot[subtype].encode(cse_data[subtype])
+        dataset[subtype] = Dataset().train_test_split(oh_data[subtype])
     return dataset
 
 
-def prepare_nn(dataset, params):
+def train_nn(dataset, subtypes):
     """
-    Make all the encodings and nn setup to train or load a recurrent network.
-    The input are the ticks dataset, the encoder to be used and the list of
-    encoded CSE, together with the params.
-    :param ticks: the ticks file read
-    :param encoder: the encoder used
-    :param cse: the list of cse objects
-    :param params: the parameters read from configuration file
-    :return: the dictionary with the recurrent networks trained or load from
-        file.
+    Train a model.
     """
+    nn = {}
+    for subtype in subtypes:
+        nn[subtype] = Csnn(None, subtype)
 
-    if params._train is True:
-        nn = {}
-        for subtype in params._names:
-            nn[subtype] = Csnn(subtype)
-            nn[subtype].build_model(
-                dataset[subtype]).train().save()
-    else:
-        nn = {}
-        for name in params._model_names.keys():
-            nn[name] = {}
-            for subtype in params._names:
-                nn[name][subtype] = Csnn(subtype)
-                nn[name][subtype].load(
-                    params._model_names[name][subtype])
+        window_size = dataset[subtype].X_train.shape[1]
+        num_categories = dataset[subtype].X_train.shape[2]
+
+        nn[subtype].build_model(window_size, num_categories).train(
+            dataset[subtype].X_train, dataset[subtype].y_train).save()
+
     return nn
 
 
-def predict_testset(dataset, encoder, nn, params):
+def load_nn(model_names, subtypes):
+    """
+    """
+    nn = {}
+    for name in model_names.keys():
+        nn[name] = {}
+        for subtype in subtypes:
+            nn[name][subtype] = Csnn(name, subtype)
+            nn[name][subtype].load(model_names[name][subtype])
+    return nn
+
+
+def predict_testset(dataset, encoder, nn, subtypes):
     """
     Run prediction for body and move over the testsets in the dataset object
     :param dataset: the data
@@ -110,7 +109,7 @@ def predict_testset(dataset, encoder, nn, params):
     :return:
     """
     prediction = {}
-    for name in params._names:
+    for name in subtypes:
         prediction[name] = Predict(dataset[name].X_test,
                                    dataset[name].y_test,
                                    encoder.onehot[name])
@@ -120,7 +119,7 @@ def predict_testset(dataset, encoder, nn, params):
     return prediction
 
 
-def predict_next_close(ticks, encoder, nn, params):
+def predict_close(ticks, encoder, nn, params):
     """
     From a list of ticks, make a prediction of what will be the next CS.
     :param ticks: a dataframe of ticks with the expected headers and size
@@ -130,7 +129,16 @@ def predict_next_close(ticks, encoder, nn, params):
     :param params: the parameters file read from configuration.
     :return: the close value of the CS predicted.
     """
-    # encode the tick in CSE and OH. reshape it to the expected LSTM format.
+    # Check that the input group of ticks match the size of the window of
+    # the network that is going to make the predict. That parameter is in
+    # the window_size attribute within the 'encoder'.
+    if ticks.shape[0] != encoder.window_size():
+        info_msg = 'Tickgroup resizing: {} -> {}'
+        params.log.info(info_msg.format(ticks.shape[0], encoder.window_size()))
+        ticks = ticks.iloc[-encoder.window_size():, :]
+        ticks.reset_index()
+
+    # encode the tick in CSE and OH. Reshape it to the expected LSTM format.
     cs_tick = encoder.ticks2cse(ticks)
     cs_tick_body_oh = encoder.onehot['body'].encode(
         encoder.select_body(cs_tick))
@@ -174,3 +182,25 @@ def predict_next_close(ticks, encoder, nn, params):
     # second last.
     # output_df = ticks.append(actual, ignore_index=True)
     # output_df = output_df.append(pred, ignore_index=True)
+
+#
+# Single prediction case, in sequence mode.
+# errors = []
+# for i in range(10):
+#     start = 20 + i
+#     end = start + params._window_size
+#     tick_group = ticks.iloc[start:end]
+#     real_close = ticks.iloc[end:end + 1]['c'].values[0]
+#     for name in params._model_names:
+#         nn_encoder = CSEncoder().load(params._model_names[name]['encoder'])
+#         next_close = predict_close(tick_group, nn_encoder, nn[name], params)
+#         errors.append(abs(next_close - real_close))
+#
+# plt.plot(errors)
+# med = np.median(errors)
+# std = np.std(errors)
+# plt.axhline(med, linestyle=':', color='red')
+# plt.axhline(med + std, linestyle=':', color='green')
+# plt.show()
+# plt.hist(errors, color='blue', edgecolor='black', bins=int(100 / 2))
+# plt.show()

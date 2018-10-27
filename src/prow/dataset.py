@@ -14,19 +14,22 @@ class Dataset(Params):
 
     def train_test_split(self, data):
         self.data = data.copy()
-        self._window_size = self._window_size
         self._num_categories = data.shape[1]
         series = data.copy()
         series_s = series.copy()
+
         for i in range(self._window_size):
             series = pd.concat([series, series_s.shift(-(i + 1))], axis=1)
+
         series.dropna(axis=0, inplace=True)
         train, test = train_test_split(
             series, test_size=self._test_size, shuffle=False)
         self.X_train, self.y_train = self.reshape(np.array(train))
         self.X_test, self.y_test = self.reshape(np.array(test))
+
         self.log.info('Dataset split in train {} and test {}'.format(
             self.X_train.shape[0], self.X_test.shape[0]))
+
         return self
 
     def reshape(self, data):
@@ -77,13 +80,17 @@ class Dataset(Params):
         self._num_testcases = int(self._num_samples * self._test_size)
         new_testshape = self.find_largest_divisor(
             self._num_testcases, all=True)
-        # print('Reshaping TEST from [{}] to [{}]'.format(
-        #     self._num_testcases, new_testshape))
+
+        self.log.debug('Reshaping TEST from [{}] to [{}]'.format(
+            self._num_testcases, new_testshape))
+
         self._num_testcases = new_testshape
 
         new_shape = self.find_largest_divisor(raw.shape[0], all=False)
-        # print('Reshaping RAW from [{}] to [{}]'.format(raw.shape,
-        #                                                raw[-new_shape:].shape))
+
+        self.log.debug('Reshaping RAW from [{}] to [{}]'.format(
+            raw.shape, raw[-new_shape:].shape))
+
         new_df = raw[-new_shape:].reset_index().drop(['index'], axis=1)
         self.params['adj_numrows'] = new_df.shape[0]
         self.params['adj_numcols'] = new_df.shape[1]
@@ -92,8 +99,8 @@ class Dataset(Params):
         self._num_samples = raw.shape[0]
         self._num_features = raw.shape[1] if len(raw.shape) > 1 else 1
         self._num_frames = self._num_samples - (
-            self._window_size + self._num_predictions) + 1
-        self.log.info('Adjusted dataset size to {} from {}'.format(
-            new_df.shape[0], raw.shape[0]))
+                self._window_size + self._num_predictions) + 1
+        self.log.info('Adjusted dataset size from {} -> {}'.format(
+            raw.shape[0], new_df.shape[0]))
 
         return new_df

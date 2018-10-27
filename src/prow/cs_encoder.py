@@ -54,27 +54,42 @@ class CSEncoder(Params):
         super(CSEncoder, self).__init__()
 
         self.encoding = encoding.upper()
-        self.open = self.close = self.high = self.low = 0.0
-        self.min = self.max = self.min_percentile = self.max_percentile = 0.0
-        self.mid_body_percentile = self.mid_body_point = 0.0
-        self.positive = self.negative = False
-        self.has_upper_shadow = self.has_lower_shadow = self.has_both_shadows = False
+        self.open = 0.0
+        self.close = 0.0
+        self.high = 0.0
+        self.low = 0.0
+        self.min = 0.0
+        self.max = 0.0
+        self.min_percentile = 0.0
+        self.max_percentile = 0.0
+        self.mid_body_percentile = 0.0
+        self.mid_body_point = 0.0
+        self.positive = False
+        self.negative = False
+        self.has_upper_shadow = False
+        self.has_lower_shadow = False
+        self.has_both_shadows = False
         self.shadows_symmetric = False
-        self.body_in_upper_half = self.body_in_lower_half = self.body_in_center = False
-        self.hl_interval_width = self.upper_shadow_len = self.lower_shadow_len = 0.0
-        self.upper_shadow_percentile = self.lower_shadow_percentile = 0.0
-        self.oc_interval_width = self.body_relative_size = 0.0
+        self.body_in_upper_half = False
+        self.body_in_lower_half = False
+        self.body_in_center = False
+        self.hl_interval_width = 0.0
+        self.upper_shadow_len = 0.0
+        self.lower_shadow_len = 0.0
+        self.upper_shadow_percentile = 0.0
+        self.lower_shadow_percentile = 0.0
+        self.oc_interval_width = 0.0
+        self.body_relative_size = 0.0
         self.shadows_relative_diff = 0.0
 
         # Save the origin of data here.
         self._dataset = splitext(basename(self._ticks_file))[0]
 
         # Assign the proper values to them
+        err = 'Could not find all mandatory chars (o, h, l, c) in encoding ({})'
         if values is not None:
             if self.correct_encoding() is False:
-                raise ValueError(
-                    'Could not find all mandatory chars (o, h, l, c) in encoding ({})'.
-                    format(self.encoding))
+                raise ValueError(err.format(self.encoding))
             self.open = values[self.encoding.find('O')]
             self.high = values[self.encoding.find('H')]
             self.low = values[self.encoding.find('L')]
@@ -100,21 +115,24 @@ class CSEncoder(Params):
         return cls(values)
 
     def fit(self, ticks):
+        self.log.info('Fitting CS encoder to ticks read.')
         col_names = self._ohlc_tags
         self._cse_zero_open = ticks.loc[ticks.index[0], col_names[0]]
         self._cse_zero_high = ticks.loc[ticks.index[0], col_names[1]]
         self._cse_zero_low = ticks.loc[ticks.index[0], col_names[2]]
         self._cse_zero_close = ticks.loc[ticks.index[0], col_names[3]]
         self._fitted = True
+        self.add_ohencoder()
+        return self
 
+    def add_ohencoder(self):
         # Create the OneHot encoders associated to each part of the data
         # which are the moment are 'body' and 'move'. Those names are extracted
         # from the parameters file.
+        self.log.info('Adding OneHot encoders for names {}'.format(self._names))
         for name in self._names:
             call_dict = getattr(self, '{}_dict'.format(name))
             self.onehot[name] = OHEncoder().fit(call_dict())
-
-        return self
 
     @staticmethod
     def div(a, b):
@@ -187,8 +205,8 @@ class CSEncoder(Params):
             self.body_in_center = True
         # None of the above is fulfilled...
         if any([
-                self.body_in_center, self.body_in_lower_half,
-                self.body_in_upper_half
+            self.body_in_center, self.body_in_lower_half,
+            self.body_in_upper_half
         ]) is False:
             if self.lower_shadow_percentile > self.upper_shadow_percentile:
                 self.body_in_upper_half = True
@@ -360,7 +378,7 @@ class CSEncoder(Params):
         pos = self._def_prcntg_mvmt_encodings.index(letter)
         value = self._def_mvmt_upper_limits[pos] if pos < len(
             self._def_mvmt_upper_limits) else self._def_mvmt_upper_limits[len(
-                self._def_mvmt_upper_limits)]
+            self._def_mvmt_upper_limits)]
         if sign == 'n':
             value *= -1.0
         self.log.debug('Decoding <{}> with value: {:.2f}'.format(code, value))
@@ -446,6 +464,7 @@ class CSEncoder(Params):
         """
         Encodes a dataframe of Ticks, returning an array of CSE objects.
         """
+        self.log.info('Converting ticks dim{} to CSE.'.format(ticks.shape))
         cse = []
         for index in range(0, ticks.shape[0]):
             cse.append(
@@ -486,8 +505,11 @@ class CSEncoder(Params):
             path = self._pickle_filename
         else:
             path = pickle_file_path
-        with open(path, 'rb') as f:
+        pickle_file = join(self._models_dir, '{}'.format(path))
+        with open(pickle_file, 'rb') as f:
             self.__dict__.update(pickle.load(f).__dict__)
+        self.log.info('Loaded encoder pickle file: {}'.format(pickle_file))
+        self.add_ohencoder()
         return self
 
     def save_cse(self, cse, filename):
@@ -571,6 +593,9 @@ class CSEncoder(Params):
             output_filepath = '{}_{:d}'.format(base_filepath + idx)
             idx += 1
         return output_filepath
+
+    def window_size(self):
+        return self._window_size
 
     @classmethod
     def select_body(self, cse):

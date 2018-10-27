@@ -1,39 +1,25 @@
 from cs_encoder import CSEncoder
 from ticks import Ticks
 from params import Params
-from cs_api import predict_next_close, prepare_nn, prepare_datasets
-
+from cs_api import predict_close, train_nn, load_nn, prepare_datasets
+from cs_utils import random_tick_group
 
 params = Params()
 ticks = Ticks().read_ohlc()
-encoder = CSEncoder().fit(ticks)
 
-# TODO: La lista de CSEs no tienen que ser objetos del mismo tipo que el encoder
-cse = encoder.ticks2cse(ticks)
-dataset = prepare_datasets(encoder, cse, params)
-nn = prepare_nn(dataset, params)
-
-
-# Single prediction case
-errors = []
-for i in range(100):
-    start = 2000 + i
-    end = start + params._window_size
-    tick = ticks.iloc[start:end]
-    real_close = ticks.iloc[end:end + 1]['c'].values[0]
-    for name in params._model_names:
-        next_close = predict_next_close(tick, encoder, nn[name], params)
-        errors.append(abs(next_close - real_close))
-
-# plt.plot(errors)
-# med = np.median(errors)
-# std = np.std(errors)
-# plt.axhline(med, linestyle=':', color='red')
-# plt.axhline(med + std, linestyle=':', color='green')
-# plt.show()
-# plt.hist(errors, color='blue', edgecolor='black', bins=int(100 / 2))
-# plt.show()
-
+if params.do_train is True:
+    encoder = CSEncoder().fit(ticks)
+    cse = encoder.ticks2cse(ticks)
+    dataset = prepare_datasets(encoder, cse, params.subtypes)
+    nn = train_nn(dataset, params.subtypes)
+else:
+    tick_group = random_tick_group(ticks, params.max_tick_series_length)
+    nn = load_nn(params.model_names, params.subtypes)
+    for name in params.model_names:
+        params.log.info(name)
+        nn_encoder = CSEncoder().load(params.model_names[name]['encoder'])
+        next_close = predict_close(tick_group, nn_encoder, nn[name], params)
+        params.log.info('Close pred.{}: {}'.format(name, next_close))
 #
 # EOF
 #

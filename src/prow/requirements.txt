@@ -1,4 +1,7 @@
-numpy==1.15.1
 pandas==0.23.4
-docopt==0.6.2
+Keras==2.2.2
+numpy==1.15.1
+matplotlib==2.2.3
+mpl_finance==0.10.0
+scikit_learn==0.19.2
 PyYAML==3.13
