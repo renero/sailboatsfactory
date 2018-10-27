@@ -62,7 +62,7 @@ def prepare_datasets(encoder, cse, subtypes):
     oh_data = {}
     dataset = {}
     for subtype in subtypes:
-        call_select = getattr(encoder, 'select_{}'.format(subtype))
+        call_select = getattr(encoder, '{}'.format(subtype))
         cse_data[subtype] = Dataset().adjust(call_select(cse))
         oh_data[subtype] = encoder.onehot[subtype].encode(cse_data[subtype])
         dataset[subtype] = Dataset().train_test_split(oh_data[subtype])
