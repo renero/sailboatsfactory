@@ -63,6 +63,7 @@ class Csnn(Params):
             self.name = name
         else:
             self.name = self._metadata['dataset']
+        self.subtype = subtype
         self._metadata['subtype'] = subtype
         self.log.info(
             'NN {}.{} created'.format(self.name, self._metadata['subtype']))
@@ -123,7 +124,7 @@ class Csnn(Params):
         Make a prediction over the internal X_test set.
         """
         info_msg = 'Network {}/{} making prediction'
-        self.log.info(info_msg.format(self.name, self._metadata['subtype']))
+        self.log.info(info_msg.format(self.name, self.subtype))
         self._yhat = self._model.predict(test_set)
         return self._yhat
 

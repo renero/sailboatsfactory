@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from oh_encoder import OHEncoder
 from cs_nn import Csnn
 from dataset import Dataset
 from predict import Predict
@@ -87,15 +86,19 @@ def train_nn(dataset, subtypes):
     return nn
 
 
-def load_nn(model_names, subtypes):
+def load_nn(name, model_name, subtypes):
     """
     """
     nn = {}
-    for name in model_names.keys():
-        nn[name] = {}
-        for subtype in subtypes:
-            nn[name][subtype] = Csnn(name, subtype)
-            nn[name][subtype].load(model_names[name][subtype])
+    # for name in model_names.keys():
+    #     nn[name] = {}
+    #     for subtype in subtypes:
+    #         nn[name][subtype] = Csnn(name, subtype)
+    #         nn[name][subtype].load(model_names[name][subtype])
+    for subtype in subtypes:
+        nn[subtype] = Csnn(name, subtype)
+        nn[subtype].load(model_name[subtype])
+
     return nn
 
 
@@ -140,14 +143,15 @@ def predict_close(ticks, encoder, nn, params):
 
     # encode the tick in CSE and OH. Reshape it to the expected LSTM format.
     cs_tick = encoder.ticks2cse(ticks)
-    cs_tick_body_oh = encoder.onehot['body'].encode(
-        encoder.select_body(cs_tick))
-    cs_tick_move_oh = encoder.onehot['move'].encode(
-        encoder.select_move(cs_tick))
-    input_body = cs_tick_body_oh.values.reshape((1, cs_tick_body_oh.shape[0],
-                                                 cs_tick_body_oh.shape[1]))
-    input_move = cs_tick_move_oh.values.reshape((1, cs_tick_move_oh.shape[0],
-                                                 cs_tick_move_oh.shape[1]))
+    cs_tick_body_oh = encoder.onehot['body'].encode(encoder.body(cs_tick))
+    cs_tick_move_oh = encoder.onehot['move'].encode(encoder.move(cs_tick))
+
+    # input_body = cs_tick_body_oh.values.reshape((1, cs_tick_body_oh.shape[0],
+    #                                              cs_tick_body_oh.shape[1]))
+    # input_move = cs_tick_move_oh.values.reshape((1, cs_tick_move_oh.shape[0],
+    #                                              cs_tick_move_oh.shape[1]))
+    input_body = cs_tick_body_oh.values[np.newaxis, :, :]
+    input_move = cs_tick_move_oh.values[np.newaxis, :, :]
 
     # get a prediction from the proper networks, for the body part
     raw_prediction = nn['body'].predict(input_body)[0]

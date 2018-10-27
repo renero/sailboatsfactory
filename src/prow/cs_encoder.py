@@ -598,13 +598,13 @@ class CSEncoder(Params):
         return self._window_size
 
     @classmethod
-    def select_body(self, cse):
+    def body(self, cse):
         """Returns the body element of an array of encoded candlesticks"""
         bodies = np.array([cse[i].encoded_body for i in range(len(cse))])
         return pd.DataFrame(bodies, columns=['body'])
 
     @classmethod
-    def select_move(self, cse):
+    def move(self, cse):
         """Returns the body element of an array of encoded candlesticks"""
         ohlc = np.array([[
             cse[i].encoded_delta_open, cse[i].encoded_delta_high,
