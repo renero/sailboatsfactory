@@ -1,7 +1,11 @@
 import numpy as np
 import pandas as pd
+import pickle
 from pathlib import Path
+from os.path import basename, join, splitext
+from datetime import datetime
 
+from oh_encoder import OHEncoder
 from cs_utils import which_string
 from params import Params
 
@@ -17,6 +21,8 @@ class CSEncoder(Params):
     _cse_zero_low = 0.0
     _cse_zero_close = 0.0
     _fitted = False
+
+    onehot = {}
 
     min_relative_size = 0.02
     shadow_symmetry_diff_threshold = 0.1
@@ -48,24 +54,42 @@ class CSEncoder(Params):
         super(CSEncoder, self).__init__()
 
         self.encoding = encoding.upper()
-        self.open = self.close = self.high = self.low = 0.0
-        self.min = self.max = self.min_percentile = self.max_percentile = 0.0
-        self.mid_body_percentile = self.mid_body_point = 0.0
-        self.positive = self.negative = False
-        self.has_upper_shadow = self.has_lower_shadow = self.has_both_shadows = False
+        self.open = 0.0
+        self.close = 0.0
+        self.high = 0.0
+        self.low = 0.0
+        self.min = 0.0
+        self.max = 0.0
+        self.min_percentile = 0.0
+        self.max_percentile = 0.0
+        self.mid_body_percentile = 0.0
+        self.mid_body_point = 0.0
+        self.positive = False
+        self.negative = False
+        self.has_upper_shadow = False
+        self.has_lower_shadow = False
+        self.has_both_shadows = False
         self.shadows_symmetric = False
-        self.body_in_upper_half = self.body_in_lower_half = self.body_in_center = False
-        self.hl_interval_width = self.upper_shadow_len = self.lower_shadow_len = 0.0
-        self.upper_shadow_percentile = self.lower_shadow_percentile = 0.0
-        self.oc_interval_width = self.body_relative_size = 0.0
+        self.body_in_upper_half = False
+        self.body_in_lower_half = False
+        self.body_in_center = False
+        self.hl_interval_width = 0.0
+        self.upper_shadow_len = 0.0
+        self.lower_shadow_len = 0.0
+        self.upper_shadow_percentile = 0.0
+        self.lower_shadow_percentile = 0.0
+        self.oc_interval_width = 0.0
+        self.body_relative_size = 0.0
         self.shadows_relative_diff = 0.0
 
+        # Save the origin of data here.
+        self._dataset = splitext(basename(self._ticks_file))[0]
+
         # Assign the proper values to them
+        err = 'Could not find all mandatory chars (o, h, l, c) in encoding ({})'
         if values is not None:
             if self.correct_encoding() is False:
-                raise ValueError(
-                    'Could not find all mandatory chars (o, h, l, c) in encoding ({})'.
-                    format(self.encoding))
+                raise ValueError(err.format(self.encoding))
             self.open = values[self.encoding.find('O')]
             self.high = values[self.encoding.find('H')]
             self.low = values[self.encoding.find('L')]
@@ -90,14 +114,26 @@ class CSEncoder(Params):
     def build_new(cls, values):
         return cls(values)
 
-    # @classmethod
-    def fit(self, ticks, col_names):
+    def fit(self, ticks):
+        self.log.info('Fitting CS encoder to ticks read.')
+        col_names = self._ohlc_tags
         self._cse_zero_open = ticks.loc[ticks.index[0], col_names[0]]
         self._cse_zero_high = ticks.loc[ticks.index[0], col_names[1]]
         self._cse_zero_low = ticks.loc[ticks.index[0], col_names[2]]
         self._cse_zero_close = ticks.loc[ticks.index[0], col_names[3]]
         self._fitted = True
+        self.add_ohencoder()
         return self
+
+    def add_ohencoder(self):
+        # Create the OneHot encoders associated to each part of the data
+        # which are the moment are 'body' and 'move'. Those names are extracted
+        # from the parameters file.
+        self.log.info(
+            'Adding OneHot encoders for names {}'.format(self._subtypes))
+        for name in self._subtypes:
+            call_dict = getattr(self, '{}_dict'.format(name))
+            self.onehot[name] = OHEncoder().fit(call_dict())
 
     @staticmethod
     def div(a, b):
@@ -170,8 +206,8 @@ class CSEncoder(Params):
             self.body_in_center = True
         # None of the above is fulfilled...
         if any([
-                self.body_in_center, self.body_in_lower_half,
-                self.body_in_upper_half
+            self.body_in_center, self.body_in_lower_half,
+            self.body_in_upper_half
         ]) is False:
             if self.lower_shadow_percentile > self.upper_shadow_percentile:
                 self.body_in_upper_half = True
@@ -343,7 +379,7 @@ class CSEncoder(Params):
         pos = self._def_prcntg_mvmt_encodings.index(letter)
         value = self._def_mvmt_upper_limits[pos] if pos < len(
             self._def_mvmt_upper_limits) else self._def_mvmt_upper_limits[len(
-                self._def_mvmt_upper_limits)]
+            self._def_mvmt_upper_limits)]
         if sign == 'n':
             value *= -1.0
         self.log.debug('Decoding <{}> with value: {:.2f}'.format(code, value))
@@ -387,14 +423,16 @@ class CSEncoder(Params):
 
     def cse2ticks(self, cse_codes, first_cse, col_names=None):
         """Reconstruct CSE codes read from a CSE file into ticks
-
         Arguments
           - cse_codes: DataFrame with columns 'b', 'o', 'h', 'l', 'c',
             representing the body of the candlestick, the open, high, low and
             close encoded values as two-letter strings.
-
         Returns:
           - A DataFrame with the open, high, low and close values decoded.
+          :param cse_codes: the list of CSEs to convert back to Ticks
+          :param first_cse: the first CSE to use as reference
+          :param col_names: the names of column headers to use with ticks
+          :return: the ticks as a dataframe.
         """
         assert self._fitted, "The encoder has not been fit with data yet!"
         if col_names is None:
@@ -423,6 +461,24 @@ class CSEncoder(Params):
         result.columns = col_names
         return result
 
+    def ticks2cse(self, ticks):
+        """
+        Encodes a dataframe of Ticks, returning an array of CSE objects.
+        """
+        self.log.info('Converting ticks dim{} to CSE.'.format(ticks.shape))
+        cse = []
+        for index in range(0, ticks.shape[0]):
+            cse.append(
+                CSEncoder(
+                    np.array(ticks.iloc[index])))
+            self.log.debug(
+                'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
+                    cse[index].open, cse[index].high, cse[index].low,
+                    cse[index].close))
+            cse[index].encode_body()
+            cse[index].encode_movement(cse[index - 1])
+        return cse
+
     def read_cse(self, filename=None, col_names=None):
         if filename is None:
             df = pd.read_csv(self._cse_file, sep=',')
@@ -431,9 +487,35 @@ class CSEncoder(Params):
         df.columns = col_names if col_names is not None else self._cse_colnames
         return df
 
-    def save_cse(self, cse, filename):
-        """Saves a list of CSE objects to the filename specifed.
+    def save(self):
+        """
+        Saves the CS Encoder object into a pickle dump.
+        :return: The objects itself
+        """
+        with open(self.valid_output_name(), 'wb') as f:
+            # Pickle the object dictionary using the highest protocol available
+            pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
+        return self
 
+    def load(self, pickle_file_path=None):
+        """
+        Loads the CS Encoder object from a pickle dump.
+        :return: The objects itself
+        """
+        if pickle_file_path is None:
+            path = self._pickle_filename
+        else:
+            path = pickle_file_path
+        pickle_file = join(self._models_dir, '{}'.format(path))
+        with open(pickle_file, 'rb') as f:
+            self.__dict__.update(pickle.load(f).__dict__)
+        self.log.info('Loaded encoder pickle file: {}'.format(pickle_file))
+        self.add_ohencoder()
+        return self
+
+    def save_cse(self, cse, filename):
+        """
+        Saves a list of CSE objects to the filename specifed.
         Arguments:
             - cse(list(CSEEncoder)): list of CSE objects
             - filename: the path to the file to be written as CSV
@@ -459,23 +541,9 @@ class CSEncoder(Params):
             })
         df.to_csv(filename, sep=',', index=False)
 
-    def ticks2cse(self, ticks):
-        """Encodes a dataframe of Ticks, returning an array of CSE objects."""
-        cse = []
-        for index in range(0, ticks.shape[0]):
-            cse.append(
-                CSEncoder(
-                    np.array(ticks.iloc[index])))
-            self.log.debug(
-                'Tick encoding: [{:.2f}|{:.2f}|{:.2f}|{:.2f}]'.format(
-                    cse[index].open, cse[index].high, cse[index].low,
-                    cse[index].close))
-            cse[index].encode_body()
-            cse[index].encode_movement(cse[index - 1])
-        return cse
-
     def encode(self, ticks):
-        """Encodes a dataframe of Ticks, returning a dataframe of CSE values.
+        """
+        Encodes a dataframe of Ticks, returning a dataframe of CSE values.
         """
         cse = []
         df = pd.DataFrame(index=range(ticks.shape[0]), columns=self._cse_tags)
@@ -509,14 +577,34 @@ class CSEncoder(Params):
         print('O({:.3f}), H({:.3f}), L({:.3f}), C({:.3f})'.format(
             self.open, self.high, self.low, self.close))
 
+    def valid_output_name(self):
+        """
+        Builds a valid name with the encoder metadata the date.
+        Returns The filename if the name is valid and file does not exists,
+                None otherwise.
+        """
+        self._filename = 'encoder_{}_w{}'.format(
+            self._dataset,
+            self._window_size)
+        base_filepath = join(self._models_dir, self._filename)
+        output_filepath = base_filepath
+        idx = 1
+        while Path(output_filepath).is_file() is True:
+            output_filepath = '{}_{:d}'.format(base_filepath + idx)
+            idx += 1
+        return output_filepath
+
+    def window_size(self):
+        return self._window_size
+
     @classmethod
-    def select_body(self, cse):
+    def body(self, cse):
         """Returns the body element of an array of encoded candlesticks"""
         bodies = np.array([cse[i].encoded_body for i in range(len(cse))])
         return pd.DataFrame(bodies, columns=['body'])
 
     @classmethod
-    def select_move(self, cse):
+    def move(self, cse):
         """Returns the body element of an array of encoded candlesticks"""
         ohlc = np.array([[
             cse[i].encoded_delta_open, cse[i].encoded_delta_high,

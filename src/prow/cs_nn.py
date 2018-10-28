@@ -16,7 +16,6 @@ class ValidationException(Exception):
 
 
 class Csnn(Params):
-
     _num_categories = 0
     _window_size = 3
     _num_predictions = 1
@@ -53,34 +52,35 @@ class Csnn(Params):
     # Results
     _history = None
 
-    X_train = None
-    y_train = None
-    X_test = None
-    y_test = None
-
-    def __init__(self, dataset, name):
+    def __init__(self, name, subtype):
         """
         Init the class with the number of categories used to encode candles
         """
         super(Csnn, self).__init__()
         self._metadata['dataset'] = splitext(basename(self._ticks_file))[0]
         self._metadata['epochs'] = self._epochs
-        self._metadata['name'] = name
-        self.X_train = dataset.X_train
-        self.X_test = dataset.X_test
-        self.y_train = dataset.y_train
-        self.y_test = dataset.y_test
-        # Override, if necessary, the input and window sizes with the values
-        # found in the dataset.
-        self._window_size = dataset.X_train.shape[1]
-        self._num_categories = dataset.X_train.shape[2]
-        self.log.info('NN created with name: {}'.format(name))
+        if name is not None:
+            self.name = name
+        else:
+            self.name = self._metadata['dataset']
+        self.subtype = subtype
+        self._metadata['subtype'] = subtype
+        self.log.info(
+            'NN {}.{} created'.format(self.name, self._metadata['subtype']))
 
-    def build_model(self, summary=True):
+    def build_model(self, window_size=None, num_categories=None, summary=True):
         """
         Builds the model according to the parameters specified for
-        dropout, num of categories in the output, window size,
+        the network in the params, or as arguments.
         """
+        # Override, if necessary, the input and window sizes with the values
+        # passed as arguments.
+        if window_size is not None:
+            self._window_size = window_size
+        if num_categories is not None:
+            self._num_categories = num_categories
+
+        # Build the LSTM
         model = Sequential()
         model.add(
             LSTM(
@@ -97,7 +97,6 @@ class Csnn(Params):
                 activity_regularizer=l2(0.0000001)))
         model.add(Dropout(self._dropout))
         model.add(Dense(self._num_categories, activation=self._activation))
-        # model.add(Activation("tanh"))
         model.compile(
             loss=self._loss, optimizer=self._optimizer, metrics=self._metrics)
         if summary is True:
@@ -105,14 +104,14 @@ class Csnn(Params):
         self._model = model
         return self
 
-    def train(self):
+    def train(self, X_train, y_train):
         """
-        Train the model and put the history in an internal stateself.
+        Train the model and put the history in an internal state.
         Metadata is updated with the accuracy
         """
         self._history = self._model.fit(
-            self.X_train,
-            self.y_train,
+            X_train,
+            y_train,
             epochs=self._epochs,
             batch_size=self._batch_size,
             verbose=self._verbose,
@@ -124,6 +123,8 @@ class Csnn(Params):
         """
         Make a prediction over the internal X_test set.
         """
+        info_msg = 'Network {}/{} making prediction'
+        self.log.info(info_msg.format(self.name, self.subtype))
         self._yhat = self._model.predict(test_set)
         return self._yhat
 
@@ -155,9 +156,12 @@ class Csnn(Params):
                 None otherwise.
         """
         self._filename = '{}_{}_{}_w{}_e{}_a{:.4f}'.format(
-            self._metadata['name'],
-            datetime.now().strftime('%Y%m%d_%H%M'), self._metadata['dataset'],
-            self._window_size, self._epochs, self._metadata['accuracy'][-1])
+            self._metadata['subtype'],
+            datetime.now().strftime('%Y%m%d_%H%M'),
+            self._metadata['dataset'],
+            self._window_size,
+            self._epochs,
+            self._metadata['accuracy'][-1])
         base_filepath = join(self._models_dir, self._filename)
         output_filepath = base_filepath
         idx = 1
@@ -166,22 +170,25 @@ class Csnn(Params):
             idx += 1
         return output_filepath
 
-    def load(self, modelname, summary=True):
-        """ load json and create model """
-        self.log.info('Reading model file: {}'.format(modelname))
+    def load(self, model_name, summary=False):
+        """ Load json and create model """
+        self.log.info('Reading model file: {}'.format(model_name))
         json_file = open(
-            join(self._models_dir, '{}.json'.format(modelname)), 'r')
+            join(self._models_dir, '{}.json'.format(model_name)), 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
+
         # load weights into new model
         loaded_model.load_weights(
-            join(self._models_dir, '{}.h5'.format(modelname)))
+            join(self._models_dir, '{}.h5'.format(model_name)))
         loaded_model.compile(
             loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+
         if summary is True:
             loaded_model.summary()
         self._model = loaded_model
+
         return loaded_model
 
     def save(self, modelname=None):
@@ -195,8 +202,9 @@ class Csnn(Params):
             json_file.write(model_json)
         # serialize weights to HDF5
         self._model.save_weights('{}.h5'.format(modelname))
-        print("Saved model and weights to disk")
+        self.log.info("Saved model and weights to disk")
 
+    # TODO: Take this function out to the CSPlot class.
     def plot_history(self):
         if self._history is None:
             raise ValidationException('Trying to plot without training')

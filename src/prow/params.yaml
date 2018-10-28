@@ -9,17 +9,30 @@ log_level: 2
 ticks_file: '../../data/ibex1hr1y.csv'
 encoding: 'colh'
 delimiter: '|'
-cse_file: '../../data/ibex1hr3y.cse'
 columns: ['tickopenprice', 'tickmaxprice', 'tickminprice', 'tickcloseprice']
 cse_colnames: ['body', 'open', 'high', 'low', 'close']
 ohlc_tags: ['o', 'h', 'l', 'c']
 cse_tags: ['b', 'o', 'h', 'l', 'c']
-names: ['body', 'move']
+
+# The max length of ticks to be received vi API.
+max_tick_series_length: 10
+
+# Files, Networks, Names...
 models_dir: '../../networks'
-model_filename: {
-  body: 'body_20181017_1323_ibex1hr1y_w7_e100_a0.5103',
-  move: 'move_20181017_1335_ibex1hr1y_w7_e100_a0.4215'
-}
+subtypes: ['body', 'move']
+model_names:
+  1yw7:
+    body: body_20181027_2247_ibex1hr1y_w7_e100_a0.5092
+    move: move_20181027_2314_ibex1hr1y_w7_e100_a0.4020
+    encoder: encoder_ibex1hr1y_w7
+  5yw7:
+    body: body_20181028_0954_ibex1hr5y_w7_e100_a0.5014
+    move: move_20181028_1040_ibex1hr5y_w7_e100_a0.4104
+    encoder: encoder_ibex1hr5y_w7
+  10yw7:
+    body: body_20181028_1705_ibex1hr10y_w7_e100_a0.4747
+    move: move_20181028_1849_ibex1hr10y_w7_e100_a0.4233
+    encoder: encoder_ibex1hr10y_w7
 
 # training parameters
 loss: 'mean_squared_error'
@@ -27,7 +40,7 @@ optimizer: 'adam'
 metrics: ['accuracy']
 epochs: 100
 batch_size: 10
-window_size: 7
+window_size: 3
 validation_split: 0.1
 test_size: 0.1
 verbose: 1
@@ -38,9 +51,3 @@ l1units: 256
 l2units: 256
 activation: 'tanh'
 dropout: 0.1
-
-# training parameters
-epocs: 100
-batch_size: 10
-validation_split: 0.1
-verbose: 1

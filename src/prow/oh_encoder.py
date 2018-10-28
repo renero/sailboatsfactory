@@ -6,7 +6,6 @@ from keras.utils import to_categorical
 
 class ValidationError(Exception):
     def __init__(self, message, errors):
-
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
@@ -15,7 +14,6 @@ class ValidationError(Exception):
 
 
 class OHEncoder(Params):
-
     _signed = False
     _states = set()
     _dict = dict()
@@ -53,21 +51,21 @@ class OHEncoder(Params):
         if len(data.shape) == 2:
             if self._signed is True and len(data[0]) > 1:
                 self.log.debug('case 1')
-                [self._states.update([chr[1:] for chr in l]) for l in data]
+                [self._states.update([char[1:] for char in l]) for l in data]
             else:
                 self.log.debug('case 2')
                 [self._states.update(l) for l in data]
         elif len(data.shape) == 1:
             if self._signed is True and len(data[0]) > 1:
                 self.log.debug('case 3')
-                self._states.update([chr[1:] for chr in data])
+                self._states.update([char[1:] for char in data])
             else:
                 self.log.debug('case 4')
                 self._states.update(data)
         else:
             raise ValidationError('1D or 2D array expected.', -1)
         # Build the dict.
-        self.log.info('Onehot encoding with {} elements'.format(
+        self.log.debug('Onehot encoding with {} elements'.format(
             len(self._states)))
         self._dict = {k: v for v, k in enumerate(sorted(list(self._states)))}
         self._inv_dict = {v: k for k, v in self._dict.items()}
@@ -84,19 +82,15 @@ class OHEncoder(Params):
         self._inv_dict = {v: k for k, v in self._dict.items()}
         return self
 
-    def encode(self, input):
+    def encode(self, input_vector):
         """ Convert a DataFrame of dimension (n x m x p) into an array of
         ((nxm) x p), in one hot encoding, with sign.
-
         Arguments
-
           - input: DataFrame of dimension (n * m * p)
-
         Return values
-
           - DataFrame of dimension ((n*m) * p)
         """
-        data = input.values
+        data = input_vector.values
         if len(data.shape) == 1 or len(data.shape) == 2:
             num_arrays = data.shape[0] if len(data.shape) == 2 else 1
             num_strings = data.shape[1] if len(
@@ -120,8 +114,11 @@ class OHEncoder(Params):
                 ])
         else:
             raise ValidationError('1D or 2D array expected.', -1)
-        self.log.info('Transformed onehot encoded dataset')
-        return pd.DataFrame(transformed.reshape(len(input), -1))
+
+        info_msg = 'Onehot encoded input {} -> {}'
+        self.log.info(info_msg.format(input_vector.shape, transformed.shape))
+
+        return pd.DataFrame(transformed.reshape(len(input_vector), -1))
 
     def decode(self, data):
         if len(data.shape) == 1 or len(data.shape) == 2:

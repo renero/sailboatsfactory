@@ -29,9 +29,12 @@ class Ticks(Params):
 
         if do_normalize is True:
             df = df.applymap(np.vectorize(normalize))
-        self.log.info('Read and encoded ticksfile: {}'.format(self._ticks_file))
+
+        info_msg = 'Read ticksfile: {}, output DF dim{}'
+        self.log.info(info_msg.format(self._ticks_file, df.shape))
         return df
 
-    def new_ohlc(self, values, columns):
-        df = pd.Series([values], columns=columns)
+    @staticmethod
+    def new_ohlc(values):  # , columns):
+        df = pd.Series([values])  # , columns=columns)
         return df
