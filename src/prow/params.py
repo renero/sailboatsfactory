@@ -11,6 +11,8 @@ class Params(Arguments):
         Init a class with all the parameters in the default YAML file.
         For each of them, create a new class attribute, with the same name
         but preceded by '_' character.
+        This class inherits from Arguments which reads any possible argument
+        in the command line, resulting in overwriting those in the YAML file.
         """
         super(Params, self).__init__()
 

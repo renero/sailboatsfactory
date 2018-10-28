@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from cs_encoder import CSEncoder
 from ticks import Ticks
 from params import Params
@@ -12,6 +14,7 @@ if params.do_train is True:
     cse = encoder.ticks2cse(ticks)
     dataset = prepare_datasets(encoder, cse, params.subtypes)
     nn = train_nn(dataset, params.subtypes)
+    encoder.save()
 else:
     tick_group = random_tick_group(ticks, params.max_tick_series_length)
     nn = load_nn(params.model_names, params.subtypes)

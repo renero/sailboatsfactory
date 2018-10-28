@@ -14,11 +14,6 @@ class Arguments(object):
 
         self.args = parser.parse_args()
 
-        # if args.t is not None:
-        #     self.arg_ticks_file = args.t
-        # if args.w is not None:
-        #     self.arg_window_size = args.w
-
     @property
     def arg_ticks_file(self):
         if self.args.t is not None:

@@ -583,8 +583,7 @@ class CSEncoder(Params):
         Returns The filename if the name is valid and file does not exists,
                 None otherwise.
         """
-        self._filename = 'encoder_{}_{}_w{}'.format(
-            datetime.now().strftime('%Y%m%d_%H%M'),
+        self._filename = 'encoder_{}_w{}'.format(
             self._dataset,
             self._window_size)
         base_filepath = join(self._models_dir, self._filename)

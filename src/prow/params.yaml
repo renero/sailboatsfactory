@@ -1,12 +1,12 @@
 # What do I do?
-train: True
+train: False
 predict: False
 
 # Log level: 0: Silent, 1: Errors only, 2: Warnings too, 3: info, 4: debug
-log_level: 1
+log_level: 2
 
 # data dependencies
-ticks_file: '../../data/100.csv'
+ticks_file: '../../data/ibex1hr1y.csv'
 encoding: 'colh'
 delimiter: '|'
 columns: ['tickopenprice', 'tickmaxprice', 'tickminprice', 'tickcloseprice']
@@ -22,13 +22,17 @@ models_dir: '../../networks'
 subtypes: ['body', 'move']
 model_names:
   1yw7:
-    body: body_20181017_1323_ibex1hr1y_w7_e100_a0.5103
-    move: move_20181017_1335_ibex1hr1y_w7_e100_a0.4215
-    encoder: encoder_20181017_1340_ibex1hr1y_w7
-  3yw3:
-    body: body_20181016_1530_ibex1hr3y_w3_e100_a0.4558
-    move: move_20181016_1547_ibex1hr3y_w3_e100_a0.4297
-    encoder: encoder_20181016_1550_ibex1h3y_w3
+    body: body_20181027_2247_ibex1hr1y_w7_e100_a0.5092
+    move: move_20181027_2314_ibex1hr1y_w7_e100_a0.4020
+    encoder: encoder_ibex1hr1y_w7
+  5yw7:
+    body: body_20181028_0954_ibex1hr5y_w7_e100_a0.5014
+    move: move_20181028_1040_ibex1hr5y_w7_e100_a0.4104
+    encoder: encoder_ibex1hr5y_w7
+  10yw7:
+    body: body_20181028_1705_ibex1hr10y_w7_e100_a0.4747
+    move: move_20181028_1849_ibex1hr10y_w7_e100_a0.4233
+    encoder: encoder_ibex1hr10y_w7
 
 # training parameters
 loss: 'mean_squared_error'

@@ -37,8 +37,6 @@ class CSLogger:
         print('DEBUG: {}'.format(msg))
 
     def highlight(self, msg):
-        if self._level < self._INFO:
-            return
         now = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
         print('{} - INFO - {:<20} - {}{}{}'.format(
             now,
