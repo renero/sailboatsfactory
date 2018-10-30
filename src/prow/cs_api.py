@@ -95,9 +95,6 @@ def load_nn(model_names, subtypes):
         for subtype in subtypes:
             nn[name][subtype] = Csnn(name, subtype)
             nn[name][subtype].load(model_names[name][subtype])
-    # for subtype in subtypes:
-    #     nn[subtype] = Csnn(name, subtype)
-    #     nn[subtype].load(model_name[subtype])
     return nn
 
 
@@ -145,10 +142,6 @@ def predict_close(ticks, encoder, nn, params):
     cs_tick_body_oh = encoder.onehot['body'].encode(encoder.body(cs_tick))
     cs_tick_move_oh = encoder.onehot['move'].encode(encoder.move(cs_tick))
 
-    # input_body = cs_tick_body_oh.values.reshape((1, cs_tick_body_oh.shape[0],
-    #                                              cs_tick_body_oh.shape[1]))
-    # input_move = cs_tick_move_oh.values.reshape((1, cs_tick_move_oh.shape[0],
-    #                                              cs_tick_move_oh.shape[1]))
     input_body = cs_tick_body_oh.values[np.newaxis, :, :]
     input_move = cs_tick_move_oh.values[np.newaxis, :, :]
 
@@ -176,6 +169,15 @@ def predict_close(ticks, encoder, nn, params):
     prediction_cs = np.concatenate((pred_body_cs, pred_move_cs), axis=0)
     this_prediction = dict(zip(params._cse_tags, prediction_cs))
     prediction_df = prediction_df.append(this_prediction, ignore_index=True)
+    params.log.info('Net {} ID 0x{} -> {}:{}|{}|{}|{}'.format(
+        nn['body'].name,
+        hex(id(nn)),
+        prediction_df[params._cse_tags[0]].values[0],
+        prediction_df[params._cse_tags[1]].values[0],
+        prediction_df[params._cse_tags[2]].values[0],
+        prediction_df[params._cse_tags[3]].values[0],
+        prediction_df[params._cse_tags[4]].values[0],
+    ))
 
     # Convert the prediction to a real tick
     pred = encoder.cse2ticks(prediction_df, cs_tick[-1])

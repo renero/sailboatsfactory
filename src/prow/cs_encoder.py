@@ -590,7 +590,7 @@ class CSEncoder(Params):
         output_filepath = base_filepath
         idx = 1
         while Path(output_filepath).is_file() is True:
-            output_filepath = '{}_{:d}'.format(base_filepath + idx)
+            output_filepath = '{}_{:d}'.format(base_filepath, idx)
             idx += 1
         return output_filepath
 

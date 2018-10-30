@@ -22,7 +22,8 @@ else:
         params.log.info(name)
         nn_encoder = CSEncoder().load(params.model_names[name]['encoder'])
         next_close = predict_close(tick_group, nn_encoder, nn[name], params)
-        params.log.highlight('Close pred.{}: {}'.format(name, next_close))
+        params.log.highlight('Close pred.{}: {:.4f}'.format(name, next_close))
+
 #
 # EOF
 #
