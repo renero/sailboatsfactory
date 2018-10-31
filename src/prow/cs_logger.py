@@ -1,12 +1,29 @@
 import datetime
+import inspect
 import sys
 
 
-# for current func name, specify 0 or no argument.
-# for name of caller of current func, specify 1.
-# for name of caller of caller of current func, specify 2. etc.
 def caller_name(n):
-    return sys._getframe(n + 1).f_code.co_name
+    """
+    Get the class name and the method name of the caller to the log
+
+    :param n: For current func name, specify 0 or no argument, for name of
+    caller of current func, specify 1. For name of caller of caller of
+    current func, specify 2. etc.
+    :return: A string with the class name (if applicable, '<module>' otherwise
+    and the calling function name.
+    """
+    max_stack_len = len(inspect.stack())
+    depth = n + 1
+    if (n+1) > max_stack_len:
+        depth = n
+    if 'self' not in sys._getframe(depth).f_locals:
+        class_name = 'NA'
+    else:
+        class_name = sys._getframe(depth).f_locals["self"].__class__.__name__
+    calling_function = sys._getframe(depth).f_code.co_name
+
+    return '{}:{}'.format(class_name, calling_function)
 
 
 class CSLogger:
@@ -38,7 +55,7 @@ class CSLogger:
 
     def highlight(self, msg):
         now = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - INFO - {:<20} - {}{}{}'.format(
+        print('{} - INFO - {:<30} - {}{}{}'.format(
             now,
             caller_name(1),
             self.INFOGREY, msg, self.ENDC))
@@ -47,7 +64,7 @@ class CSLogger:
         if self._level < self._INFO:
             return
         now = '{date:%Y-%m-%d %H:%M:%S}'.format(date=datetime.datetime.now())
-        print('{} - INFO - {:<20} - {}'.format(now, caller_name(1), msg))
+        print('{} - INFO - {:<30} - {}'.format(now, caller_name(1), msg))
 
     def warn(self, msg):
         if self._level < self._WARN:
