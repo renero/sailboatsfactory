@@ -21,6 +21,10 @@ max_tick_series_length: 10
 models_dir: '../../networks'
 subtypes: ['body', 'move']
 model_names:
+  1yw3:
+    body: body_20181027_2116_ibex1hr1y_w3_e100_a0.4967
+    move: move_20181027_2122_ibex1hr1y_w3_e100_a0.4496
+    encoder: encoder_ibex1hr1y_w3
   1yw7:
     body: body_20181027_2247_ibex1hr1y_w7_e100_a0.5092
     move: move_20181027_2314_ibex1hr1y_w7_e100_a0.4020
