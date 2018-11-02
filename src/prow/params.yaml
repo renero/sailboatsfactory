@@ -29,10 +29,18 @@ model_names:
     body: body_20181027_2247_ibex1hr1y_w7_e100_a0.5092
     move: move_20181027_2314_ibex1hr1y_w7_e100_a0.4020
     encoder: encoder_ibex1hr1y_w7
+  5yw3:
+    body: body_20181028_0040_ibex1hr5y_w3_e100_a0.4463
+    move: move_20181028_0755_ibex1hr5y_w3_e100_a0.4443
+    encoder: encoder_ibex1hr5y_w3
   5yw7:
     body: body_20181028_0954_ibex1hr5y_w7_e100_a0.5014
     move: move_20181028_1040_ibex1hr5y_w7_e100_a0.4104
     encoder: encoder_ibex1hr5y_w7
+  10yw3:
+    body: body_20181028_1143_ibex1hr10y_w3_e100_a0.2309
+    move: move_20181028_1249_ibex1hr10y_w3_e100_a0.4000
+    encoder: encoder_ibex1hr10y_w3
   10yw7:
     body: body_20181028_1705_ibex1hr10y_w7_e100_a0.4747
     move: move_20181028_1849_ibex1hr10y_w7_e100_a0.4233

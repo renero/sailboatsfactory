@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from cs_encoder import CSEncoder
 from cs_nn import Csnn
 from dataset import Dataset
 from predict import Predict
-from cs_encoder import CSEncoder
 
 
 def plot_body_prediction(raw_prediction, pred_body_cs):
@@ -100,6 +100,14 @@ def load_nn(model_names, subtypes):
     return nn
 
 
+def load_encoders(model_names):
+    """Load a encoder for each network"""
+    encoder = {}
+    for name in model_names:
+        encoder[name] = CSEncoder().load(model_names[name]['encoder'])
+    return encoder
+
+
 def predict_testset(dataset, encoder, nn, subtypes):
     """
     Run prediction for body and move over the testsets in the dataset object
@@ -191,39 +199,36 @@ def predict_close(ticks, encoder, nn, params):
     # output_df = ticks.append(actual, ignore_index=True)
     # output_df = output_df.append(pred, ignore_index=True)
 
-def single_prediction(tick_group, params):  # nn, tick_group, predictions, encoder):
-    nn = load_nn(params.model_names, params.subtypes)
+
+def single_prediction(tick_group, nn, encoder, params):
+    """
+    Make a single prediction over a list of ticks. It uses all the
+    networks loaded to produce all their predictions and their average in
+    a dataframe
+    """
     predictions = np.array([], dtype=np.float64)
     df = pd.DataFrame([], columns=params.model_names.keys())
     for name in params.model_names:
-        params.log.info(name)
-        encoder = CSEncoder().load(params.model_names[name]['encoder'])
-        next_close = predict_close(tick_group, encoder, nn[name], params)
+        next_close = predict_close(tick_group, encoder[name], nn[name], params)
         predictions = np.append(predictions, [next_close])
         print('{}({:.4f});'.format(name, next_close), end='')
-    return df.append(dict(zip(params.model_names.keys(), predictions)),
-                     ignore_index=True)
+    df = df.append(dict(zip(params.model_names.keys(), predictions)),
+                   ignore_index=True)
+    df['mean'] = df.mean(axis=1)
+    return df
 
 
-
-#
-# Single prediction case, in sequence mode.
-# errors = []
-# for i in range(10):
-#     start = 20 + i
-#     end = start + params._window_size
-#     tick_group = ticks.iloc[start:end]
-#     real_close = ticks.iloc[end:end + 1]['c'].values[0]
-#     for name in params._model_names:
-#         nn_encoder = CSEncoder().load(params._model_names[name]['encoder'])
-#         next_close = predict_close(tick_group, nn_encoder, nn[name], params)
-#         errors.append(abs(next_close - real_close))
-#
-# plt.plot(errors)
-# med = np.median(errors)
-# std = np.std(errors)
-# plt.axhline(med, linestyle=':', color='red')
-# plt.axhline(med + std, linestyle=':', color='green')
-# plt.show()
-# plt.hist(errors, color='blue', edgecolor='black', bins=int(100 / 2))
-# plt.show()
+def add_supervised_info(prediction, real_value, params):
+    prediction['actual'] = real_value
+    prediction['avg_diff'] = abs(
+        prediction['actual'] - prediction['mean'])
+    max_diff = 10000000.0
+    winner = ''
+    for name in params.model_names.keys():
+        diff = abs(prediction[name].iloc[-1] - prediction['actual'].iloc[-1])
+        if diff < max_diff:
+            max_diff = diff
+            winner = name
+    prediction['winner'] = ''
+    prediction['winner'].iloc[-1] = winner
+    return prediction
