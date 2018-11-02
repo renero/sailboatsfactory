@@ -377,9 +377,11 @@ class CSEncoder(Params):
         sign = code[0]
         letter = code[1]
         pos = self._def_prcntg_mvmt_encodings.index(letter)
+        self.log.debug('Percentage position <{}={}>'.format(letter, pos))
         value = self._def_mvmt_upper_limits[pos] if pos < len(
             self._def_mvmt_upper_limits) else self._def_mvmt_upper_limits[len(
             self._def_mvmt_upper_limits)]
+        self.log.debug('New value = {:.2f}'.format(value))
         if sign == 'n':
             value *= -1.0
         self.log.debug('Decoding <{}> with value: {:.2f}'.format(code, value))
@@ -391,22 +393,23 @@ class CSEncoder(Params):
         time series, returns the reconstructed tick (OHLC).
         """
         mm = prev_cse.hl_interval_width
-        mvmt_sign = [
-            +1 if this_cse[column][0] == 'p' else -1
-            for column in range(len(self._ohlc_tags))
-        ]
-        self.log.debug('Sign of movement: {}|{}|{}|{}'.format(
-            mvmt_sign[0], mvmt_sign[1], mvmt_sign[2], mvmt_sign[3]))
-        mvmt_shift = [(self.decode_movement_code(this_cse[column]) * mm)
-                      for column in range(len(self._ohlc_tags))]
+        # mvmt_sign = [
+        #     +1 if this_cse[column+1][0] == 'p' else -1
+        #     for column in range(len(self._ohlc_tags))
+        # ]
+        # self.log.debug('Sign of movement: {}|{}|{}|{}'.format(
+        #     mvmt_sign[0], mvmt_sign[1], mvmt_sign[2], mvmt_sign[3]))
+        amount_shift = [(self.decode_movement_code(this_cse[column]) * mm)
+                        for column in self._ohlc_tags]
         self.log.debug(
-            'Amount of movement: {:.02f}|{:.02f}|{:.02f}|{:.02f}'.format(
-                mvmt_shift[0], mvmt_shift[1], mvmt_shift[2], mvmt_shift[3]))
+            'Amount of movement: {:.04f}|{:.04f}|{:.04f}|{:.04f}'.format(
+                amount_shift[0], amount_shift[1], amount_shift[2],
+                amount_shift[3]))
         reconstructed_tick = [
-            prev_cse.min + (mvmt_shift[0] * mvmt_sign[0]),
-            prev_cse.high + (mvmt_shift[0] * mvmt_sign[1]),
-            prev_cse.low + (mvmt_shift[0] * mvmt_sign[2]),
-            prev_cse.max + (mvmt_shift[0] * mvmt_sign[3])
+            prev_cse.min + amount_shift[0],
+            prev_cse.high + amount_shift[0],
+            prev_cse.low + amount_shift[0],
+            prev_cse.max + amount_shift[0]
         ]
         # If this CSE is negative, swap the open and close values
         if this_cse['b'][0] == 'n':
@@ -444,12 +447,12 @@ class CSEncoder(Params):
         rec_ticks = [[
             first_cse.open, first_cse.high, first_cse.low, first_cse.close
         ]]
-        for i in range(1, len(cse_codes)):
+        for i in range(0, len(cse_codes)):
             this_cse = cse_codes.loc[cse_codes.index[i]]
             self.log.debug('Decoding: {}|{}|{}|{}|{}'.format(
                 this_cse['b'], this_cse['o'], this_cse['h'], this_cse['l'],
                 this_cse['c']))
-            this_tick = self.decode_cse(this_cse, cse_decoded[i - 1])
+            this_tick = self.decode_cse(this_cse, cse_decoded[-1])
             cse_decoded.append(self.build_new(this_tick))
             this_tick = self.adjust_body(this_cse['b'][1], this_tick)
             self.log.debug(

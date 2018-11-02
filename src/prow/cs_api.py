@@ -45,6 +45,7 @@ def plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions,
     ax.xaxis.label.set_size(2)
     for vl in [i * pred_length for i in range(num_predictions + 1)]:
         plt.axvline(x=vl, linestyle=':', color='red')
+    plt.show()
 
 
 def prepare_datasets(encoder, cse, subtypes):
@@ -163,6 +164,7 @@ def predict_close(ticks, encoder, nn, params):
         encoder.onehot['move'].decode(Y_pred[i])[0] for i in
         range(num_predictions)
     ]
+    plot_move_prediction(y, Y_pred, pred_move_cs, num_predictions, pred_length)
 
     # Decode the prediction into a normal tick (I'm here!!!)
     prediction_df = pd.DataFrame([], columns=params._cse_tags)
@@ -181,7 +183,7 @@ def predict_close(ticks, encoder, nn, params):
 
     # Convert the prediction to a real tick
     pred = encoder.cse2ticks(prediction_df, cs_tick[-1])
-    return pred['c'].values[0]
+    return pred['c'].values[-1]
 
     # Plot everything. The prediction is the last one. The actual is the
     # second last.

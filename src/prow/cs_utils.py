@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, seed
 
 
 def letter_in_string(string, letter):
@@ -45,6 +45,7 @@ def random_tick_group(ticks, max_len):
     :param max_len: the maximum length of the series to be taken away
     :return: the dataframe of length max_len extracted
     """
+    seed(1971)
     start = randint(0, ticks.shape[0] - max_len - 1)
     end = start + max_len
     return ticks.iloc[start:end]

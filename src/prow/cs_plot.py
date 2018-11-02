@@ -20,7 +20,7 @@ class CSPlot(object):
         pass
 
     @classmethod
-    def plot(cls, data, title=None, ohlc_names=_default_ohlc_names):
+    def candlesticks(cls, data, title=None, ohlc_names=_default_ohlc_names):
         """
         Plot a candlestick diagram from a Dataframe. The colum names that contains
         the OHLC values can be specified as an array of strings to the arguments of
