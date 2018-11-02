@@ -5,6 +5,7 @@ import pandas as pd
 from cs_nn import Csnn
 from dataset import Dataset
 from predict import Predict
+from cs_encoder import CSEncoder
 
 
 def plot_body_prediction(raw_prediction, pred_body_cs):
@@ -189,6 +190,21 @@ def predict_close(ticks, encoder, nn, params):
     # second last.
     # output_df = ticks.append(actual, ignore_index=True)
     # output_df = output_df.append(pred, ignore_index=True)
+
+def single_prediction(tick_group, params):  # nn, tick_group, predictions, encoder):
+    nn = load_nn(params.model_names, params.subtypes)
+    predictions = np.array([], dtype=np.float64)
+    df = pd.DataFrame([], columns=params.model_names.keys())
+    for name in params.model_names:
+        params.log.info(name)
+        encoder = CSEncoder().load(params.model_names[name]['encoder'])
+        next_close = predict_close(tick_group, encoder, nn[name], params)
+        predictions = np.append(predictions, [next_close])
+        print('{}({:.4f});'.format(name, next_close), end='')
+    return df.append(dict(zip(params.model_names.keys(), predictions)),
+                     ignore_index=True)
+
+
 
 #
 # Single prediction case, in sequence mode.
