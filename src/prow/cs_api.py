@@ -194,11 +194,6 @@ def predict_close(ticks, encoder, nn, params):
     pred = encoder.cse2ticks(prediction_df, cs_tick[-1])
     return pred['c'].values[-1]
 
-    # Plot everything. The prediction is the last one. The actual is the
-    # second last.
-    # output_df = ticks.append(actual, ignore_index=True)
-    # output_df = output_df.append(pred, ignore_index=True)
-
 
 def single_prediction(tick_group, nn, encoder, params):
     """
@@ -207,21 +202,42 @@ def single_prediction(tick_group, nn, encoder, params):
     a dataframe
     """
     predictions = np.array([], dtype=np.float64)
-    df = pd.DataFrame([], columns=params.model_names.keys())
     for name in params.model_names:
         next_close = predict_close(tick_group, encoder[name], nn[name], params)
         predictions = np.append(predictions, [next_close])
-        print('{}({:.4f});'.format(name, next_close), end='')
+
+    model_names = list(params.model_names.keys())
+    new_columns = ['actual', 'avg', 'avg_diff', 'median', 'med_diff', 'winner']
+    df = pd.DataFrame([], columns=model_names + new_columns)
     df = df.append(dict(zip(params.model_names.keys(), predictions)),
                    ignore_index=True)
-    df['mean'] = df.mean(axis=1)
+    df['avg'] = df.mean(axis=1)
+    df['median'] = df.median(axis=1)
     return df
 
 
 def add_supervised_info(prediction, real_value, params):
+    """
+    Add to the single prediction the actual value expected (if any), the
+    difference between the mean predicted value and the actual value, and
+    which network name is the one producing the closest value
+    :param prediction: the prediction made by all networks in a form of
+    DataFrame with the columns being the name of the networks
+    :param real_value: the actual value that followed the sequence presented
+    to the set of networks. This is the value to be predicted.
+    :param params: The parameters of the whole enchilada
+    :return: The dataframe of the predictions enriched with the actual
+    prediction, the difference between the mean and the actual, and the winner
+    network.
+    """
+    def diff_with_mean(actual, mean):
+        return abs(actual - mean)
+
     prediction['actual'] = real_value
-    prediction['avg_diff'] = abs(
-        prediction['actual'] - prediction['mean'])
+    prediction['avg_diff'] = diff_with_mean(prediction['actual'],
+                                            prediction['avg'])
+    prediction['med_diff'] = diff_with_mean(prediction['actual'],
+                                            prediction['median'])
     max_diff = 10000000.0
     winner = ''
     for name in params.model_names.keys():
@@ -229,6 +245,5 @@ def add_supervised_info(prediction, real_value, params):
         if diff < max_diff:
             max_diff = diff
             winner = name
-    prediction['winner'] = ''
-    prediction['winner'].iloc[-1] = winner
+    prediction.loc[:, 'winner'] = winner
     return prediction
