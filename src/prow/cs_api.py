@@ -1,3 +1,5 @@
+import pickle
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -205,14 +207,29 @@ def single_prediction(tick_group, nn, encoder, params):
     for name in params.model_names:
         next_close = predict_close(tick_group, encoder[name], nn[name], params)
         predictions = np.append(predictions, [next_close])
-
     model_names = list(params.model_names.keys())
-    new_columns = ['actual', 'avg', 'avg_diff', 'median', 'med_diff', 'winner']
+    new_columns = ['actual', 'avg', 'avg_diff', 'median', 'med_diff',
+                   'winner']
+
+    # If I decide to use ensembles, I must add two new columns
+    if params._ensemble is True:
+        new_columns = new_columns + ['ensemble', 'ens_diff']
+
     df = pd.DataFrame([], columns=model_names + new_columns)
     df = df.append(dict(zip(params.model_names.keys(), predictions)),
                    ignore_index=True)
     df['avg'] = df.mean(axis=1)
     df['median'] = df.median(axis=1)
+
+    # When using ensemble, compute what the ensemble predicts, and add it.
+    if params._ensemble:
+        params.log.info('Refining prediction with ensemble.')
+        with open(params._ensemble_path, 'rb') as file:
+            ensemble_model = pickle.load(file)
+        input_df = df[
+            [u'10yw7', u'1yw7', u'1yw3', u'1yw10', u'median',
+             u'5yw10', u'10yw3', u'5yw3', u'avg', u'5yw7']]
+        df['ensemble'] = ensemble_model.predict(input_df)[0]
     return df
 
 
@@ -230,14 +247,15 @@ def add_supervised_info(prediction, real_value, params):
     prediction, the difference between the mean and the actual, and the winner
     network.
     """
-    def diff_with_mean(actual, mean):
-        return abs(actual - mean)
+
+    def diff_with(column_label):
+        return abs(prediction['actual'] - prediction[column_label])
 
     prediction['actual'] = real_value
-    prediction['avg_diff'] = diff_with_mean(prediction['actual'],
-                                            prediction['avg'])
-    prediction['med_diff'] = diff_with_mean(prediction['actual'],
-                                            prediction['median'])
+    prediction['avg_diff'] = diff_with('avg')
+    prediction['med_diff'] = diff_with('median')
+    if params._ensemble is True:
+        prediction['ens_diff'] = diff_with('ensemble')
     max_diff = 10000000.0
     winner = ''
     for name in params.model_names.keys():

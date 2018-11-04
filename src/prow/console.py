@@ -27,6 +27,9 @@ else:
         prediction = add_supervised_info(prediction, tick_group['c'][-1],
                                          params)
         predictions = predictions.append(prediction)
+
+    if params._save_predictions is True:
+        predictions.to_csv(params._predictions_path, index=False)
     print(predictions)
 
 #

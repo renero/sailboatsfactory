@@ -3,7 +3,7 @@ train: False
 predict: False
 
 # Log level: 0: Silent, 1: Errors only, 2: Warnings too, 3: info, 4: debug
-log_level: 2
+log_level: 3
 
 # data dependencies
 ticks_file: '../../data/ibex1hr1y.csv'
@@ -16,6 +16,12 @@ cse_tags: ['b', 'o', 'h', 'l', 'c']
 
 # The max length of ticks to be received vi API.
 max_tick_series_length: 10
+
+# Do I use the ensemble part?
+ensemble: True
+ensemble_path: ../../networks/ridge_l2_model.pkl
+save_predictions: False
+predictions_path: ../../data/predictions.csv
 
 # Files, Networks, Names...
 models_dir: '../../networks'
