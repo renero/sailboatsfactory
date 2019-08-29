@@ -6,7 +6,7 @@ from cs_logger import CSLogger
 
 class Params(Arguments):
 
-    def __init__(self, params_filepath='./params.yaml'):
+    def __init__(self, params_filepath='./params.yaml', args=[]):
         """
         Init a class with all the parameters in the default YAML file.
         For each of them, create a new class attribute, with the same name
@@ -14,7 +14,7 @@ class Params(Arguments):
         This class inherits from Arguments which reads any possible argument
         in the command line, resulting in overwriting those in the YAML file.
         """
-        super(Params, self).__init__()
+        super(Params, self).__init__(*args)
 
         with open(params_filepath, 'r') as stream:
             try:
@@ -24,7 +24,8 @@ class Params(Arguments):
 
         for param_name in self.params.keys():
             attribute_name = '_{}'.format(param_name)
-            setattr(self, attribute_name, self.params[param_name])
+            if not hasattr(self, attribute_name):
+                setattr(self, attribute_name, self.params[param_name])
 
         # Overwrite attributes specified by argument.
         if self.arg_window_size is not None:

@@ -1,14 +1,20 @@
 #!/usr/bin/env pythonw
 
-from cs_api import load_encoders, train_nn, prepare_datasets, \
-    single_prediction, load_nn, add_supervised_info
+import os
+import sys
+
+import tensorflow as tf
+
+from cs_api import *
 from cs_encoder import CSEncoder
 from cs_utils import random_tick_group
 from params import Params
 from ticks import Ticks
-import pandas as pd
 
-params = Params()
+tf.logging.set_verbosity(tf.logging.ERROR)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+params = Params(args=sys.argv)
 ticks = Ticks().read_ohlc()
 
 if params.do_train is True:
@@ -21,6 +27,7 @@ else:
     nn = load_nn(params.model_names, params.subtypes)
     encoder = load_encoders(params.model_names)
     predictions = pd.DataFrame([])
+
     for i in range(10):
         tick_group = random_tick_group(ticks, params.max_tick_series_length + 1)
         prediction = single_prediction(tick_group[:-1], nn, encoder, params)
