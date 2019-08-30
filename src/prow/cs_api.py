@@ -58,7 +58,7 @@ def prepare_datasets(encoder, cse, subtypes):
 
     :param encoder: The encoder used to build the CSE list.
     :param cse: The list of CSE objects
-    :param params: The parameters read from file
+    :param subtypes: The parameters read from file
     :return: The datasets for each of the models that need to be built. The
         names of the models specify the 'body' part and the 'move' part.
     """
@@ -110,20 +110,29 @@ def load_encoders(model_names):
     return encoder
 
 
-def predict_testset(dataset, encoder, nn, subtypes):
+def predict_dataset(dataset, encoder, nn, subtypes=None, split='test'):
     """
     Run prediction for body and move over the testsets in the dataset object
-    :param dataset: the data
-    :param encoder:
-    :param nn:
-    :param params:
+    :param dataset: the dataset
+    :param encoder: the encoder to be used
+    :param nn: the network to be used to make the prediction
+    :param subtypes: normally 'body' and 'move'
+    :param split: whether to perform the prediction over the 'test' or 'train'
+        splits
     :return:
     """
+    if subtypes is None:
+        subtypes = ['body', 'move']
     prediction = {}
     for name in subtypes:
-        prediction[name] = Predict(dataset[name].X_test,
-                                   dataset[name].y_test,
-                                   encoder.onehot[name])
+        if split == 'test':
+            prediction[name] = Predict(dataset[name].X_test,
+                                       dataset[name].y_test,
+                                       encoder.onehot[name])
+        else:
+            prediction[name] = Predict(dataset[name].X_train,
+                                       dataset[name].y_train,
+                                       encoder.onehot[name])
         call_predict = getattr(prediction[name],
                                'predict_{}_batch'.format(name))
         call_predict(nn[name])
