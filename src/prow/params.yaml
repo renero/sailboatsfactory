@@ -20,21 +20,21 @@ max_tick_series_length: 10
 
 # Do I use the ensemble part?
 ensemble_path: ../../networks/ridge_l2_model.pkl
-save_predictions: False
-predictions_path: ../../data/predictions_2019.csv
+save_predictions: true
+predictions_path: ../../data
 
 # When in "predict", do I run "n" random predictions or do I run predictions
 # over an entire dataset
-predict_training: True
+predict_training: talse
 
 # Files, Networks, Names...
 models_dir: '../../networks'
 subtypes: ['body', 'move']
 model_names:
  1yw10:
-   body: body_20190829_1124_ibex1hr1y_w10_e100_a0.0460
-   move: move_20190829_1142_ibex1hr1y_w10_e100_a0.3586
-   encoder: encoder_ibex1hr1y_w10
+   body: body_20181017_1323_ibex1hr1y_w7_e100_a0.5103
+   move: move_20181017_1335_ibex1hr1y_w7_e100_a0.4215
+   encoder: encoder_ibex1hr5y_w7.dms
 
 #  1yw3:
 #    body: body_20181027_2116_ibex1hr1y_w3_e100_a0.4967
