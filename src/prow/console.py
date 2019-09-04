@@ -36,8 +36,7 @@ else:
     predictions = pd.DataFrame([])
 
     if params._predict_training:
-        # for from_idx in range(0, ticks.shape[0] - params._window_size + 1):
-        for from_idx in range(0, 50 - params._window_size + 1):
+        for from_idx in range(0, ticks.shape[0] - params._window_size + 1):
             tick_group = ohlc_data.iloc[from_idx:from_idx + params._window_size]
             prediction = single_prediction(tick_group, nn, encoder, params)
             prediction = add_supervised_info(
