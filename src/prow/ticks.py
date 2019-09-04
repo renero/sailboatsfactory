@@ -4,7 +4,6 @@ from params import Params
 
 
 class Ticks(Params):
-
     min_value = 0.
     max_value = 0.
 
@@ -18,7 +17,11 @@ class Ticks(Params):
         return (x * (self.max_value - self.min_value)) + self.min_value
 
     def scale_back(self, df):
-        return df.applymap(np.vectorize(self.denormalize))
+        if len(list(self.params['model_names'].keys())) == 1:
+            return df.applymap(np.vectorize(self.denormalize))
+        else:
+            return df.loc[:, df.columns != 'winner'].applymap(
+                np.vectorize(self.denormalize))
 
     def read_ohlc(self,
                   filepath=None,

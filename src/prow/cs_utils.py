@@ -66,6 +66,10 @@ def valid_output_name(filename, path, extension=None):
     output_filepath = base_filepath
     idx = 1
     while Path(output_filepath).is_file() is True:
-        output_filepath = '{}_{:d}'.format(base_filepath, idx)
+        if extension:
+            output_filepath = join(path, filename) + '_{:d}.{}'.format(idx,
+                                                                     extension)
+        else:
+            output_filepath = join(path, filename + '_{}'.format(idx))
         idx += 1
     return output_filepath
