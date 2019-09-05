@@ -36,7 +36,8 @@ else:
     predictions = pd.DataFrame([])
 
     if params._predict_training:
-        for from_idx in range(0, ticks.shape[0] - params._window_size + 1):
+        #for from_idx in range(0, ticks.shape[0] - params._window_size + 1):
+        for from_idx in range(0, 50 - params._window_size + 1):
             tick_group = ohlc_data.iloc[from_idx:from_idx + params._window_size]
             prediction = single_prediction(tick_group, nn, encoder, params)
             prediction = add_supervised_info(
@@ -57,14 +58,16 @@ else:
     if params._save_predictions is True:
         # Reorder columns to set 'actual' in first position
         actual_position = list(predictions.columns).index('actual')
-        avg_position = list(predictions.columns).index('avg')
+        avg_position = []
+        if len(params.model_names.keys()) > 1:
+            avg_position = list(predictions.columns).index('avg')
         columns = [actual_position] + [i for i in
-                                       range(actual_position)] + [avg_position]
+                                       range(actual_position)] + avg_position
         predictions = predictions.iloc[:, columns]
 
         # Find a valid filename and save everything
         filename = valid_output_name(
-            filename='predictions_1y5y_w10',
+            filename='predictions_1yw1',
             path=params._predictions_path,
             extension='csv')
         predictions.to_csv(filename, index=False)
